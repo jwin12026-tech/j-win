@@ -35,7 +35,7 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
   const sign = (payload, exp) => jwt.sign(payload, cfg.jwtSecret, { expiresIn: exp });
   const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {
     const status = e.status || (e instanceof CinetPayError ? 502 : 500);
-    if (status >= 500) log('[erreur]', e.message);
+    if (status >= 500) log('[erreur]', req.method, req.originalUrl, e.stack || e.message);
     res.status(status).json({ error: status >= 500 && !(e instanceof CinetPayError) ? 'Erreur serveur.' : e.message });
   });
   const bad = (m, status = 400) => Object.assign(new Error(m), { status });
@@ -53,7 +53,7 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
 
   registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, notifier, log, express, getV4: () => v4, dir: here });
 
-  app.get('/api/health', (req, res) => res.json({ ok: true }));
+  app.get('/api/health', (req, res) => res.json({ ok: true, version: 'v5-admin-kyc' }));
   app.get('/api/config', (req, res) => res.json({
     live: true, paymentMode: cfg.paymentMode, adminOm: cfg.adminOm, plan: cfg.plan, fees: { ...cfg.fees, mission: cfg.fees.mission ?? 1 }, banner: cfg.banner, contact: { email: cfg.adminEmail, phone: cfg.company.contact }, limits: cfg.limits, ocr: cfg.ocrEnabled && !!readIdentity,
     methods: Object.keys(METHOD_LABEL), sso: { google: !!cfg.googleClientId }, otpChannels: ['sms', 'whatsapp', 'both'],
@@ -82,7 +82,8 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
   const okDob = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m) return false; const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); if (d.getUTCMonth() !== +m[2] - 1) return false; const now = new Date(); const age = now.getUTCFullYear() - d.getUTCFullYear() - (now < new Date(Date.UTC(now.getUTCFullYear(), +m[2] - 1, +m[3])) ? 1 : 0); return +m[1] >= 1920 && age >= 18; };
   app.post('/api/register', limiter(60e3, 10), wrap(async (req, res) => {
     const b = req.body || {};
-    const phone = readProof(b.proof, 'signup');
+    const phone = b.proof ? readProof(b.proof, 'signup') : normPhone(b.phone);
+    if (!validPhone(phone)) throw bad('Numéro mobile ivoirien à 10 chiffres requis.');
     if (!(b.nom || '').trim() || !(b.prenoms || '').trim()) throw bad('Nom et prénoms requis.');
     if (!okDob(b.naissance)) throw bad('Date de naissance invalide (18 ans minimum).');
     if (!okPw(b.password)) throw bad('Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.');
@@ -93,10 +94,9 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
     const id = uid('u_');
     const docNum = String(b.pieceNumero || '');
     db.prepare('INSERT INTO users(id,phone,email,provider,nom,prenoms,dob,adresse,pw_hash,kyc_status,kyc_doc_type,kyc_doc_last4,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
-      .run(id, phone, email || null, 'phone', b.nom.trim(), b.prenoms.trim(), b.naissance, (b.adresse || '').trim(), bcrypt.hashSync(b.password, 11), cfg.kycMode === 'auto' ? 'verified' : 'pending', b.pieceType || '', docNum.slice(-3), Date.now());
+      .run(id, phone, email || null, 'phone', b.nom.trim(), b.prenoms.trim(), b.naissance, (b.adresse || '').trim(), bcrypt.hashSync(b.password, 11), 'none', '', '', Date.now());
     const nu = userById(id);
-    if (cfg.kycMode === 'manual') v4.kycAlert(nu, b.pieceType, docNum.slice(-3));
-    const notified = await notifier.toUser(nu, 'Bienvenue sur J-WIN', `Bienvenue ${nu.prenoms.split(' ')[0]} ! Votre compte J-WIN est créé. Connectez-vous avec votre numéro ${phone}. Finalisez la vérification de votre identité pour retirer vos gains.`).catch(() => ({ email: false, sms: false }));
+    const notified = await notifier.toUser(nu, 'Bienvenue sur J-WIN', `Bienvenue ${nu.prenoms.split(' ')[0]} ! Votre compte J-WIN est créé. Connectez-vous avec votre numéro ${phone}. Sans vérification d'identité, vous pouvez créer et réaliser ${cfg.plan.unverified} missions. Vérifiez votre pièce d'identité et faites un selfie dans Paramètres pour lever cette limite et retirer vos gains.`).catch(() => ({ email: false, sms: false }));
     res.status(201).json({ ...session(nu), notified });
   }));
   app.post('/api/login', limiter(60e3, 10), wrap(async (req, res) => {
@@ -111,7 +111,23 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
     if (!u) throw bad('Aucun compte pour ce numéro.', 404);
     res.json(session(u));
   }));
+  app.post('/api/password/forgot', limiter(60e3, 5), wrap(async (req, res) => {
+    const em = String(req.body?.email || '').trim().toLowerCase();
+    const u = em && db.prepare('SELECT * FROM users WHERE email=? AND pw_hash IS NOT NULL').get(em);
+    if (u && u.status !== 'suspended') {
+      const token = jwt.sign({ sub: u.id }, cfg.jwtSecret + u.pw_hash.slice(-12), { expiresIn: '1h', audience: 'pwreset' });
+      notifier.email(u.email, 'Réinitialisation de votre mot de passe J-WIN', `Bonjour ${u.prenoms.split(' ')[0]},\n\nPour choisir un nouveau mot de passe, ouvrez ce lien (valable 1 heure) :\n${cfg.publicUrl}/?reset=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`).catch(() => {});
+    }
+    res.json({ ok: true });   // même réponse que le compte existe ou non
+  }));
   app.post('/api/password/reset', limiter(60e3, 10), wrap(async (req, res) => {
+    if (req.body?.token) {
+      const dec = jwt.decode(String(req.body.token)), u = dec?.sub && userById(dec.sub);
+      if (!okPw(req.body?.password)) throw bad('Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.');
+      try { if (!u?.pw_hash) throw 0; jwt.verify(req.body.token, cfg.jwtSecret + u.pw_hash.slice(-12), { audience: 'pwreset' }); } catch { throw bad('Lien invalide ou expiré. Refaites une demande.', 401); }
+      db.prepare('UPDATE users SET pw_hash=? WHERE id=?').run(bcrypt.hashSync(req.body.password, 11), u.id);
+      return res.json({ ok: true });
+    }
     const phone = readProof(req.body?.proof, 'reset');
     if (!okPw(req.body?.password)) throw bad('Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.');
     db.prepare('UPDATE users SET pw_hash=? WHERE phone=?').run(bcrypt.hashSync(req.body.password, 11), phone);
@@ -128,7 +144,7 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
       const p = req.body.profile || {};
       if (!p.nom || !p.prenoms || !okDob(p.naissance)) throw bad('Profil incomplet pour créer le compte.');
       const id = uid('u_');
-      db.prepare('INSERT INTO users(id,email,provider,nom,prenoms,dob,adresse,kyc_status,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(id, t.email.toLowerCase(), 'google', p.nom, p.prenoms, p.naissance, p.adresse || '', 'pending', Date.now());
+      db.prepare('INSERT INTO users(id,email,provider,nom,prenoms,dob,adresse,kyc_status,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(id, t.email.toLowerCase(), 'google', p.nom, p.prenoms, p.naissance, p.adresse || '', 'none', Date.now());
       u = userById(id);
     }
     res.json(session(u));
