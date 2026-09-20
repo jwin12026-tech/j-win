@@ -35,8 +35,8 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
   const sign = (payload, exp) => jwt.sign(payload, cfg.jwtSecret, { expiresIn: exp });
   const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {
     const status = e.status || (e instanceof CinetPayError ? 502 : 500);
-    if (status >= 500) log('[erreur]', e.message);
-    res.status(status).json({ error: status >= 500 && !(e instanceof CinetPayError) ? 'Erreur serveur.' : e.message });
+    if (status >= 500) log('[erreur]', req.method, req.originalUrl, e.stack || e.message);
+    res.status(status).json({ error: !e.status && !(e instanceof CinetPayError) ? 'Erreur serveur.' : e.message });   // les erreurs voulues (ex. 503 « console désactivée ») gardent leur message
   });
   const bad = (m, status = 400) => Object.assign(new Error(m), { status });
   const auth = (req, res, next) => {
@@ -53,7 +53,7 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
 
   registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, notifier, log, express, getV4: () => v4, dir: here });
 
-  app.get('/api/health', (req, res) => res.json({ ok: true }));
+  app.get('/api/health', (req, res) => res.json({ ok: true, version: 'v6-admin' }));
   app.get('/api/config', (req, res) => res.json({
     live: true, paymentMode: cfg.paymentMode, adminOm: cfg.adminOm, plan: cfg.plan, fees: { ...cfg.fees, mission: cfg.fees.mission ?? 1 }, banner: cfg.banner, contact: { email: cfg.adminEmail, phone: cfg.company.contact }, limits: cfg.limits, ocr: cfg.ocrEnabled && !!readIdentity,
     methods: Object.keys(METHOD_LABEL), sso: { google: !!cfg.googleClientId }, otpChannels: ['sms', 'whatsapp', 'both'],
@@ -148,6 +148,46 @@ export function createApp({ cfg, db = openDb(cfg.dbFile), cinetpay, readIdentity
       u = userById(id);
     }
     res.json(session(u));
+  }));
+
+  /* ---------- lien de connexion par e-mail (fonctionne avec toute messagerie, sans code ni Google) ---------- */
+  const mailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e), lastLink = new Map();
+  const welcomeText = (u) => `Bienvenue ${u.prenoms.split(' ')[0]} ! Votre compte J-WIN est créé. Sans vérification d'identité, vous pouvez créer et réaliser ${cfg.plan.unverified} missions. Envoyez votre pièce d'identité et un selfie depuis Paramètres pour lever cette limite et retirer vos gains.`;
+  app.post('/api/auth/link', limiter(60e3, 8), wrap(async (req, res) => {
+    const b = req.body || {}, email = String(b.email || '').trim().toLowerCase();
+    if (!mailOk(email)) throw bad('Adresse e-mail invalide.');
+    const ex = db.prepare('SELECT * FROM users WHERE email=?').get(email);
+    if (ex?.status === 'suspended') throw bad('Compte suspendu. Contactez le support J-WIN.', 403);
+    let profile = null;
+    if (!ex) {
+      if (b.mode !== 'signup') return res.json({ ok: true });                         // même réponse, compte existant ou non
+      const p = b.profile || {};
+      if (!String(p.nom || '').trim() || !String(p.prenoms || '').trim() || !okDob(p.naissance)) throw bad('Nom, prénoms et date de naissance (18 ans minimum) requis pour créer le compte.');
+      profile = { nom: String(p.nom).trim().slice(0, 60), prenoms: String(p.prenoms).trim().slice(0, 80), naissance: p.naissance, adresse: String(p.adresse || '').trim().slice(0, 150) };
+    }
+    if (Date.now() - (lastLink.get(email) || 0) < 30e3) throw bad('Un lien vient d\'être envoyé. Patientez 30 secondes avant d\'en demander un autre.', 429);
+    lastLink.set(email, Date.now());
+    const token = jwt.sign({ email, profile, jti: uid('l_') }, cfg.jwtSecret, { expiresIn: '15m', audience: 'magic' });
+    const url = `${cfg.publicUrl}/?login=${encodeURIComponent(token)}`, name = (ex || profile).prenoms.split(' ')[0];
+    const subject = ex ? 'Votre lien de connexion J-WIN' : 'Confirmez votre inscription à J-WIN';
+    const text = `Bonjour ${name},\n\n${ex ? 'Pour vous connecter à J-WIN' : 'Pour créer votre compte J-WIN'}, ouvrez ce lien (valable 15 minutes, utilisable une seule fois) :\n${url}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`;
+    const html = `<div style="font-family:system-ui,Arial,sans-serif;max-width:480px"><h2>J-WIN</h2><p>Bonjour ${name.replace(/[<>&]/g, '')},</p><p>${ex ? 'Cliquez pour vous connecter à J-WIN.' : 'Cliquez pour confirmer votre adresse et créer votre compte J-WIN.'}</p><p><a href="${url}" style="display:inline-block;padding:12px 20px;border-radius:999px;background:#2563eb;color:#fff;text-decoration:none;font-weight:700">${ex ? 'Me connecter' : 'Créer mon compte'}</a></p><p style="color:#666;font-size:12px">Lien valable 15 minutes, utilisable une seule fois. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.</p></div>`;
+    if (!(await notifier.email(email, subject, text, html))) throw bad('L\'envoi de l\'e-mail a échoué. Réessayez plus tard ou contactez J-WIN.', 503);
+    res.json({ ok: true });
+  }));
+  app.post('/api/auth/link/verify', limiter(60e3, 20), wrap(async (req, res) => {
+    let p; try { p = jwt.verify(String(req.body?.token || ''), cfg.jwtSecret, { audience: 'magic' }); } catch { throw bad('Lien invalide ou expiré. Demandez un nouveau lien.', 401); }
+    if (!db.prepare('INSERT OR IGNORE INTO magic_links(jti,email,used_at) VALUES(?,?,?)').run(p.jti, p.email, Date.now()).changes) throw bad('Ce lien a déjà été utilisé. Demandez-en un nouveau.', 401);
+    let u = db.prepare('SELECT * FROM users WHERE email=?').get(p.email), created = false, notified;
+    if (!u) {
+      if (!p.profile) throw bad('Aucun compte pour cette adresse. Créez d\'abord votre compte.', 404);
+      const id = uid('u_');
+      db.prepare('INSERT INTO users(id,email,provider,nom,prenoms,dob,adresse,kyc_status,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(id, p.email, 'email', p.profile.nom, p.profile.prenoms, p.profile.naissance, p.profile.adresse, 'none', Date.now());
+      u = userById(id); created = true;
+      notified = await notifier.toUser(u, 'Bienvenue sur J-WIN', welcomeText(u)).catch(() => ({ email: false, sms: false }));
+    }
+    if (u.status === 'suspended') throw bad('Compte suspendu. Contactez le support J-WIN.', 403);
+    res.json({ ...session(u), created, notified });
   }));
   app.get('/api/me', auth, wrap(async (req, res) => res.json({ user: publicUser(userById(req.uid)) })));
 

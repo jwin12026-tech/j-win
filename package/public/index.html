@@ -1631,6 +1631,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <svg class="ic i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
         <svg class="ic i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
       </button>
+      <a class="btn btn-ghost btn-sm" href="/admin" data-admin hidden>Admin</a>
       <button class="btn btn-ghost btn-sm" id="navLogin" type="button" data-act="login">Se connecter</button>
       <button class="btn btn-primary btn-sm" id="navSignup" type="button" data-act="signup">Créer un compte</button>
       <button class="btn btn-primary btn-sm" id="navApp" type="button" data-act="to-app" hidden>Mon espace</button>
@@ -2188,7 +2189,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <a class="brand" href="#top" aria-label="J-WIN, retour en haut"><svg viewBox="0 0 64 40" aria-hidden="true"><use href="#chev"/></svg>J-WIN</a>
       <nav aria-label="Pied de page">
         <a href="#comment">Comment ça marche</a><a href="#win">Missions et WIN</a><a href="#paiement">Paiement</a><a href="#offres">Offres</a><a href="#fonctions">Fonctionnalités</a><a href="#faq">Questions</a><a href="#" data-act="feedback">Donner mon avis</a>
-      </nav>
+      <a href="/admin" data-admin hidden>Admin</a></nav>
     </div>
     <p class="copy">© <span id="year">2026</span> J-WIN, Abidjan, Côte d'Ivoire. Version test 3.0.</p>
   </div>
@@ -2349,7 +2350,7 @@ window.JWIN_CONFIG = {
       <div class="prov-card"><span class="prov" id="ssoBadge">G</span><div><b id="ssoName">Google</b><br><small class="muted" id="ssoCtx">Connexion avec un compte</small></div></div>
       <h2 class="au-h" id="ssoH">J-WIN souhaite accéder à votre compte</h2>
       <p class="au-sub" id="ssoSub"></p>
-      <div class="demo-note">Démo : cette étape simule la page du fournisseur. Aucune vraie connexion n'est effectuée.</div>
+      <div class="demo-note" id="ssoDemo">Démo : cette étape simule la page du fournisseur. Aucune vraie connexion n'est effectuée.</div>
       <form class="au-form" id="fSso" novalidate>
         <div class="field"><label for="ssoEmail">Adresse e-mail</label><input class="input" id="ssoEmail" type="email" autocomplete="email" placeholder="prenom.nom@gmail.com"><p class="err" id="ssoEmailE" role="alert"></p></div>
         <button class="btn btn-primary" type="submit" id="ssoBtn">Autoriser J-WIN</button>
@@ -2988,6 +2989,7 @@ function dlgClose(){UI.dlgMission=null;if(dlg.open)dlg.close()}
    ===================================================================== */
 const LOGO={google:'l-google',apple:'l-apple',microsoft:'l-microsoft',yahoo:'l-yahoo',other:'l-mail'};
 function ssoButtons(){
+  if(LIVE){$$('[data-sso]').forEach(box=>{box.innerHTML=`<button type="button" data-act="sso-start" data-p="other" data-ctx="${box.dataset.ctx}"><svg class="lg lg-mark" aria-hidden="true"><use href="#l-mail"/></svg><span>Recevoir un lien par e-mail</span></button>`});return}
   $$('[data-sso]').forEach(box=>{
     box.innerHTML=Object.keys(PROV).map(k=>{const p=PROV[k];return `<button type="button" data-act="sso-start" data-p="${k}" data-ctx="${box.dataset.ctx}"><svg class="lg lg-mark" aria-hidden="true"><use href="#${LOGO[k]}"/></svg><span>${k==='other'?p.n:'Continuer avec '+p.n}<small>${p.sub}</small></span></button>`}).join('');
   });
@@ -3262,7 +3264,6 @@ async function onOtpOk(o,proof){
 
 /* --- SSO (simulation du fournisseur) --- */
 function ssoStart(p,ctx){
-  if(LIVE){toast('La connexion par messagerie sera disponible après configuration de Google et d\'Apple (voir le guide du serveur). Utilisez votre numéro pour le moment.');return}
   if(ctx==='signup'){
     let ok=validateCommon();
     if($('#sAddr').value.trim().length<3){fe('sAddr','Entrez votre adresse (commune, quartier).');if(ok)$('#sAddr').focus();ok=false}else fe('sAddr','');
@@ -3283,7 +3284,21 @@ function ssoStart(p,ctx){
     $('#ssoBtn').textContent='Autoriser J-WIN';
   }
   $('#ssoEmail').value='';fe('ssoEmail','');
+  $('#fSso').hidden=false;const sd=$('#ssoDemo');if(sd)sd.hidden=LIVE;
+  if(LIVE){$('#ssoName').textContent='Lien par e-mail';$('#ssoBadge').textContent='@';$('#ssoH').textContent=ctx==='signup'?'Confirmez votre adresse e-mail':'Recevez votre lien de connexion';$('#ssoSub').textContent='Nous vous envoyons un lien par e-mail, valable 15 minutes : un clic et vous êtes connecté. Toute messagerie fonctionne (Gmail, Yahoo, Outlook, iCloud…).';$('#ssoBtn').textContent='Envoyer le lien'}
   showAuth('sso');
+}
+async function sendMagic(em){
+  const s=A.sso||{ctx:'login'},btn=$('#ssoBtn');btn.disabled=true;
+  try{
+    const body={email:em,mode:s.ctx==='signup'?'signup':'login'};
+    if(s.ctx==='signup'&&s.profile)body.profile={nom:s.profile.nom,prenoms:s.profile.prenoms,naissance:s.profile.naissance,adresse:s.profile.adresse};
+    await http('/api/auth/link',{body});
+    $('#ssoH').textContent='Vérifiez votre boîte e-mail';
+    $('#ssoSub').innerHTML='Nous avons envoyé un lien à <b>'+esc(em)+'</b>. Ouvrez le message de J-WIN (pensez aux courriers indésirables) et cliquez sur le lien : vous serez connecté. Il est valable 15 minutes.'+(s.ctx==='login'?'<br><br><small>Pas de message ? Vous n\'avez peut-être pas encore de compte : utilisez « Créer un compte ».</small>':'');
+    $('#fSso').hidden=true;
+  }catch(e){fe('ssoEmail',e.message)}
+  finally{btn.disabled=false}
 }
 async function ssoComplete(email){
   const em=email.trim().toLowerCase(),s=A.sso;if(!s)return;
@@ -3320,7 +3335,7 @@ function enterApp(u,o){
     notify('star','Vérifiez votre identité','Sans vérification, vous pouvez créer et réaliser '+UNVER()+' missions. Envoyez votre pièce d\'identité et un selfie depuis Paramètres pour lever cette limite et retirer vos gains.');saveS();
     if(!LIVE){notify('check','Compte créé','Un e-mail de confirmation a été envoyé à '+(u.email||'votre adresse')+' et un SMS au '+fmtPhone(u.contact||'')+' (simulation en version test).',['mail','sms']);saveS();render()}
     else if(o.notified){notify('check','Compte créé','Un e-mail de confirmation et un SMS vous ont été envoyés.',['mail','sms']);saveS()}
-    setTimeout(()=>toast('Bienvenue sur J-WIN, '+n+' !'+(LIVE?(o.notified?' E-mail et SMS de confirmation envoyés.':''):' (E-mail et SMS simulés en version test.)')),200);
+    setTimeout(()=>toast('Bienvenue sur J-WIN, '+n+' !'+(LIVE?(o.notified?(u.contact?' E-mail et SMS de confirmation envoyés.':' E-mail de bienvenue envoyé.'):''):' (E-mail et SMS simulés en version test.)')),200);
   }
   if(A.plan&&PLANS[A.plan]&&A.plan!=='standard'){const p=A.plan;A.plan=null;setTimeout(()=>openPlans(p),500)}
 }
@@ -4203,6 +4218,7 @@ document.addEventListener('submit',async e=>{
   else if(id==='fSso'){
     const em=$('#ssoEmail').value.trim();
     if(!fe('ssoEmail',validMail(em)?'':'Entrez une adresse e-mail valide.'))return;
+    if(LIVE)return sendMagic(em);
     if(A.sso.p==='other'){
       if(A.sso.ctx==='signup'&&API.byEmail(em))return fe('ssoEmail','Un compte existe déjà avec cette adresse. Connectez-vous.');
       ssoComplete(em);
@@ -4267,6 +4283,8 @@ document.addEventListener('click',e=>{
 window.addEventListener('jwin-full',()=>{if(!store.warned){store.warned=true;toast('Stockage du navigateur presque plein : retirez des photos ou des missions.')}});
 
 /* ---------- init ---------- */
+if(LIVE)$$('[data-admin]').forEach(e=>e.hidden=false);
+(function(){const lt=new URLSearchParams(location.search).get('login');if(LIVE&&lt){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(async()=>{try{const r=await http('/api/auth/link/verify',{body:{token:lt}});enterFromServer(r,{welcome:!!r.created,notified:r.notified&&r.notified.email})}catch(e){openD(auth);showAuth('login');toast(e.message)}},300)}})();
 (function(){const rt=new URLSearchParams(location.search).get('reset');if(LIVE&&rt){A.reset={token:rt};try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>{openD(auth);showAuth('newpw')},500)}})();
 ssoButtons();initSelects();
 (async function restore(){

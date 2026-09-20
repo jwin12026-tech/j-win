@@ -18,7 +18,11 @@ const csvCell = (v) => { const s = v === null || v === undefined ? '' : String(v
 const iso = (t) => (t ? new Date(t).toISOString().replace('T', ' ').slice(0, 19) : '');
 
 export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, notifier, log, express, getV4, dir }) {
-  const audit = (action, target = '', detail = '') => db.prepare('INSERT INTO audit(at,actor,action,target,detail) VALUES(?,?,?,?,?)').run(Date.now(), 'admin', action, String(target), typeof detail === 'string' ? detail : JSON.stringify(detail));
+  const audit = (action, target = '', detail = '') => {
+    try { db.prepare('INSERT INTO audit(at,actor,action,target,detail) VALUES(?,?,?,?,?)').run(Date.now(), 'admin', action, String(target), typeof detail === 'string' ? detail : JSON.stringify(detail)); }
+    catch (e) { log('[audit] écriture impossible :', e.message); }   // le journal ne doit jamais empêcher de se connecter
+  };
+  const dbWritable = () => { try { db.exec('CREATE TABLE IF NOT EXISTS _probe(x)'); db.exec('DROP TABLE _probe'); return true; } catch (e) { return e.message; } };
 
   /* ----- réglages : la base prime sur les variables d'environnement ----- */
   const applySettings = () => { for (const r of db.prepare('SELECT * FROM settings').all()) if (r.key in SETTINGS) setPath(cfg, r.key, JSON.parse(r.value)); };
@@ -29,14 +33,35 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
 
   /* ----- authentification administrateur ----- */
   const safeEq = (a, b) => { const x = crypto.createHash('sha256').update(String(a)).digest(), y = crypto.createHash('sha256').update(String(b)).digest(); return crypto.timingSafeEqual(x, y); };
-  app.post('/api/admin/login', limiter(60e3, 6), wrap(async (req, res) => {
-    if (!cfg.adminPassword) throw bad('Console désactivée : définissez ADMIN_PASSWORD sur le serveur.', 503);
-    if (!safeEq(req.body?.password || '', cfg.adminPassword)) { audit('login_echec', req.ip); throw bad('Mot de passe administrateur incorrect.', 401); }
+  /* identifiants : par défaut J-WIN / 1234 (ou ADMIN_USER / ADMIN_PASSWORD), modifiables ensuite depuis la console */
+  const kvGet = (k) => { const x = db.prepare('SELECT value FROM settings WHERE key=?').get(k); return x ? JSON.parse(x.value) : null; };
+  const kvSet = (k, v) => db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k, JSON.stringify(v));
+  if (process.env.ADMIN_RESET_CREDENTIALS === '1') db.prepare("DELETE FROM settings WHERE key IN ('admin.user','admin.hash')").run();   // secours : oubli du mot de passe
+  const creds = () => { const u = kvGet('admin.user'), h = kvGet('admin.hash'); return u && h ? { user: u, hash: h, custom: true } : { user: process.env.ADMIN_USER || 'J-WIN', plain: cfg.adminPassword || '1234', custom: false }; };
+  const isDefault = () => !creds().custom && !cfg.adminPassword;
+  const checkPw = (c, pw) => (c.custom ? bcrypt.compareSync(String(pw), c.hash) : safeEq(pw, c.plain));
+  app.get('/api/admin/status', (req, res) => res.json({ enabled: true, version: 'v6-admin', dbWritable: dbWritable() === true }));
+  app.post('/api/admin/login', limiter(60e3, 8), wrap(async (req, res) => {
+    const c = creds(), okUser = String(req.body?.user || '').trim().toLowerCase() === c.user.toLowerCase(), okPw = checkPw(c, req.body?.password || '');
+    if (!(okUser && okPw)) { audit('login_echec', req.ip); throw bad('Nom d\'utilisateur ou mot de passe incorrect.', 401); }
     audit('login', req.ip);
     res.json({ token: jwt.sign({ sub: 'admin' }, cfg.jwtSecret, { expiresIn: '8h', audience: 'admin-session' }) });
   }));
   const A = (req, res, next) => { try { jwt.verify((req.headers.authorization || '').replace(/^Bearer /, ''), cfg.jwtSecret, { audience: 'admin-session' }); next(); } catch { res.status(401).json({ error: 'Session administrateur expirée.' }); } };
   const r = express.Router(); r.use(A, limiter(60e3, 240));
+  /* tant que le mot de passe par défaut est en place : pas d'accès aux données sensibles ni aux opérations d'argent */
+  const S = (req, res, next) => (isDefault() ? res.status(403).json({ error: 'Par sécurité, changez d\'abord le mot de passe par défaut : Réglages du site > Accès administrateur.' }) : next());
+  r.post(['/users/:id/adjust', '/users/:id/reset-password', '/users/:id/kyc', '/payments/:id/approve', '/payments/:id/reject', '/broadcast', '/system/test-sms'], S);
+  r.get(['/kyc/:id/:which', '/export/:name', '/backup'], S);
+  r.put('/settings', S);
+  r.post('/credentials', wrap(async (req, res) => {
+    const c = creds(), b = req.body || {}, user = String(b.user || '').trim(), pw = String(b.password || '');
+    if (!checkPw(c, b.current || '')) throw bad('Mot de passe actuel incorrect.', 401);
+    if (!/^[\w.\- ]{3,40}$/.test(user)) throw bad('Nom d\'utilisateur : 3 à 40 caractères (lettres, chiffres, point, tiret).');
+    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw)) throw bad('Nouveau mot de passe : 8 caractères minimum, avec au moins une lettre et un chiffre.');
+    kvSet('admin.user', user); kvSet('admin.hash', bcrypt.hashSync(pw, 11)); audit('admin_credentials', user);
+    res.json({ ok: true });
+  }));
   app.use('/api/admin', r);
   const get = (p, fn) => r.get(p, wrap(async (req, res) => res.json(await fn(req))));
   const post = (p, fn) => r.post(p, wrap(async (req, res) => res.json({ ok: true, ...(await fn(req)) })));
@@ -45,11 +70,13 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
 
   /* ----- tableau de bord ----- */
   get('/stats', () => {
+    const defaultCreds = isDefault();
     const now = Date.now(), d7 = now - 7 * 864e5, d30 = now - 30 * 864e5;
     const fees = one("SELECT COALESCE(SUM(fee),0) s FROM payments WHERE status='SUCCESS'").s + (one("SELECT COALESCE(SUM(-amount),0) s FROM ledger WHERE kind='mission_pay'").s - one("SELECT COALESCE(SUM(amount),0) s FROM ledger WHERE kind='mission_win'").s);
     const day = (t) => new Date(t).toISOString().slice(0, 10), days = Array.from({ length: 30 }, (_, i) => day(now - (29 - i) * 864e5));
     const bucket = (rows, f) => { const m = Object.fromEntries(days.map((x) => [x, 0])); rows.forEach((x) => { const k = day(x.t); if (k in m) m[k] += f(x); }); return days.map((k) => ({ day: k, v: m[k] })); };
     return {
+      defaultCreds,
       users: { total: one('SELECT COUNT(*) c FROM users').c, verified: one("SELECT COUNT(*) c FROM users WHERE kyc_status='verified'").c, kycPending: one("SELECT COUNT(*) c FROM users WHERE kyc_status='pending'").c, suspended: one("SELECT COUNT(*) c FROM users WHERE status='suspended'").c, new7: one('SELECT COUNT(*) c FROM users WHERE created_at>=?', d7).c, new30: one('SELECT COUNT(*) c FROM users WHERE created_at>=?', d30).c },
       missions: { pending: one("SELECT COUNT(*) c FROM missions WHERE mod='pending' AND status!='annulee'").c, open: one("SELECT COUNT(*) c FROM missions WHERE mod='approved' AND status='attente'").c, inProgress: one("SELECT COUNT(*) c FROM missions WHERE status IN ('cours','terminee')").c, paid: one("SELECT COUNT(*) c FROM missions WHERE status='payee'").c, rejected: one("SELECT COUNT(*) c FROM missions WHERE mod='rejetee'").c, volume: one("SELECT COALESCE(SUM(amount),0) s FROM missions WHERE status='payee'").s },
       queue: { missions: one("SELECT COUNT(*) c FROM missions WHERE mod='pending' AND status!='annulee'").c, deposits: one("SELECT COUNT(*) c FROM payments WHERE kind='recharge' AND status='PENDING_ADMIN'").c, withdrawals: one("SELECT COUNT(*) c FROM payments WHERE kind='withdraw' AND status='PENDING_ADMIN'").c, kyc: one("SELECT COUNT(*) c FROM users WHERE kyc_status='pending'").c },
@@ -193,7 +220,7 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
     let dbSize = 0, upN = 0, upSize = 0;
     try { if (cfg.dbFile !== ':memory:') dbSize = fs.statSync(cfg.dbFile).size; } catch { /* */ }
     try { for (const f of fs.readdirSync(path.resolve(cfg.uploadDir))) { upN++; upSize += fs.statSync(path.join(path.resolve(cfg.uploadDir), f)).size; } } catch { /* */ }
-    return { node: process.version, uptimeH: Math.round(process.uptime() / 36) / 100, publicUrl: cfg.publicUrl, dbSize, uploads: { n: upN, size: upSize }, smtp: !!cfg.smtp.host || !!cfg.smtp.json, smtpUser: cfg.smtp.user, sms: cfg.otp.mode === 'twilio' ? 'Twilio' : 'console (aucun envoi)', ocr: cfg.ocrEnabled, paymentMode: cfg.paymentMode, kycMode: cfg.kycMode, prod: cfg.prod, maintenance: cfg.maintenance, adminEmail: cfg.adminEmail };
+    return { node: process.version, uptimeH: Math.round(process.uptime() / 36) / 100, publicUrl: cfg.publicUrl, dbSize, uploads: { n: upN, size: upSize }, smtp: !!cfg.smtp.host || !!cfg.smtp.json, smtpUser: cfg.smtp.user, dbWritable: dbWritable(), sms: cfg.otp.mode === 'twilio' ? 'Twilio' : 'console (aucun envoi)', ocr: cfg.ocrEnabled, paymentMode: cfg.paymentMode, kycMode: cfg.kycMode, prod: cfg.prod, maintenance: cfg.maintenance, adminEmail: cfg.adminEmail };
   });
   post('/system/test-email', async (req) => { const to = String(req.body?.to || cfg.adminEmail); const ok = await notifier.email(to, 'J-WIN : test d\'envoi', 'Si vous lisez ce message, l\'envoi d\'e-mails fonctionne.'); audit('test_email', to, ok ? 'ok' : 'échec'); return { sent: ok, to }; });
   post('/system/test-sms', async (req) => { const ph = String(req.body?.phone || cfg.adminPhone); const ok = await notifier.sms(ph, 'J-WIN : test d\'envoi de SMS.'); audit('test_sms', ph, ok ? 'ok' : 'échec'); return { sent: ok, to: ph }; });

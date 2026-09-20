@@ -32,7 +32,7 @@ test('inscription sans code SMS : profil non vérifié, e-mail de bienvenue', as
   assert.equal((await reg('123', 'c@example.com')).s, 400);               // numéro invalide
   assert.equal((await reg('0703000003', 'c@example.com', 'Mineur', { naissance: '2015-01-01' })).s, 400);
   assert.equal((await call('POST', '/api/login', { phone: '0703000001', password: 'Motdepasse1' })).s, 200);
-  T = (await call('POST', '/api/admin/login', { password: 'Sup3r-secret' })).j.token;
+  T = (await call('POST', '/api/admin/login', { user: 'J-WIN', password: 'Sup3r-secret' })).j.token;
 });
 test('limite de 3 missions créées sans vérification, levée après validation de l\'identité', async () => {
   for (const n of [1, 2, 3]) assert.equal((await mission(A.j.token, 'Mission ' + n)).s, 201);

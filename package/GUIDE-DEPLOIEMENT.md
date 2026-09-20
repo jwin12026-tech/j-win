@@ -33,25 +33,40 @@ mais tout le reste fonctionne, e-mails compris. Pour l'activer : compte **Twilio
 
 Chaque lien demande une confirmation et n'agit qu'une fois. Ne les transférez à personne.
 
-## 5. La console d'administration : https://votre-site/admin
-Définissez `ADMIN_PASSWORD` (un mot de passe long et unique) puis ouvrez `/admin`. Vous y trouvez :
+## 5. La console d'administration : bouton « Admin » du site, ou https://votre-site/admin
+- **Première connexion** : nom d'utilisateur `J-WIN`, mot de passe `1234`.
+- **Changez-les tout de suite** : Réglages du site > **Accès administrateur** (nom d'utilisateur et mot de passe modifiables à volonté).
+  Tant que `1234` est en place, un bandeau rouge s'affiche et la console bloque les données sensibles : pièces d'identité, exports, sauvegarde,
+  ajustements de portefeuille, validation des dépôts et retraits, modification des réglages. Vous pouvez tout consulter, mais rien de risqué n'est possible.
+  C'est volontaire : ce mot de passe est public dans ce guide.
+- **Mot de passe oublié** : dans Render > Environment, ajoutez `ADMIN_RESET_CREDENTIALS=1`, redéployez, reconnectez-vous avec `J-WIN` / `1234`, changez-les, puis **supprimez** la variable.
+- Vous pouvez aussi imposer un mot de passe de départ avec les variables `ADMIN_USER` et `ADMIN_PASSWORD` (dans ce cas il n'y a plus de mode restreint).
+
+Contenu de la console :
 - **Tableau de bord** : inscriptions, missions, volumes, soldes, commissions J-WIN, files d'attente.
 - **À traiter** : missions à approuver (avec photos et vocal), dépôts à valider, retraits à payer, identités à vérifier.
-- **Utilisateurs** : recherche, fiche complète, suspension/réactivation, statut d'identité, ajustement de portefeuille (motif obligatoire), mot de passe temporaire.
+- **Utilisateurs** : recherche, fiche complète, suspension/réactivation, statut d'identité et photos de la pièce, ajustement de portefeuille (motif obligatoire), mot de passe temporaire.
 - **Missions, Dépôts et retraits, Transactions** : suivi et actions, factures émises.
-- **Réglages du site** (effet immédiat, sans redéployer) : bandeau d'annonce, mode maintenance, frais, limites, numéro Orange Money, contacts, mode de paiement et d'identité, message e-mail à tous les utilisateurs.
-- **Exports et sauvegarde** : CSV (Excel) des utilisateurs, missions, mouvements, paiements, factures, journal ; sauvegarde complète de la base.
+- **Réglages du site** (effet immédiat) : bandeau d'annonce, maintenance, frais, limites, numéro Orange Money, contacts, mode de paiement et d'identité, message à tous, accès administrateur.
+- **Exports et sauvegarde** : CSV (Excel) et sauvegarde complète de la base.
 - **Système et journal** : état du serveur, test d'envoi d'e-mail et de SMS, journal de toutes vos actions.
 
 Faites une sauvegarde régulièrement (au moins chaque semaine) et gardez-la ailleurs que sur le serveur. Pour modifier les textes ou le design du site lui-même, il faut modifier le code : demandez-le à votre développeur ou à Claude, puis republiez.
 
-## 6. Inscription, vérification et limites
+## 6. Connexion des utilisateurs par lien e-mail (remplace Google/Apple/Microsoft)
+Un utilisateur saisit son adresse e-mail, reçoit un lien de J-WIN (valable 15 minutes, utilisable une seule fois) et un clic le connecte ou crée son compte.
+Cela marche avec **toute messagerie** (Gmail, Yahoo, Outlook, iCloud…), sans configuration chez Google.
+Les e-mails partent **de jwin1.2026@gmail.com par le serveur**, à condition d'avoir renseigné `SMTP_USER` et `SMTP_PASS` (le mot de passe d'application Gmail de 16 caractères, voir étape 1).
+Sans `SMTP_PASS`, aucun e-mail ne part : l'inscription par e-mail, les alertes d'administrateur et « mot de passe oublié » sont alors impossibles.
+Vérifiez avec **Système et journal > Envoyer l'e-mail**.
+
+## 7. Inscription, vérification et limites
 - **Inscription** : nom, prénoms, date de naissance, numéro, e-mail, mot de passe (ou messagerie Google une fois configurée). Aucun code à saisir. Les numéros et e-mails ne sont donc pas prouvés : un même numéro ou e-mail ne peut servir qu'à un compte.
 - **Profil non vérifié** au départ : au maximum **3 missions créées et 3 réalisées** (modifiable dans Réglages du site), et **pas de retrait**.
 - **Vérification** : depuis Paramètres, l'utilisateur envoie sa CNI ou son passeport (le numéro est lu automatiquement) et un selfie. Vous contrôlez et validez ; les limites Standard (100 créées / 50 réalisées par trimestre) s'appliquent alors. `KYC_MODE=auto` valide sans contrôle humain.
 - **Mot de passe oublié** : l'utilisateur reçoit un lien par e-mail (valable 1 heure, utilisable une seule fois).
 
-## 7. Limites actuelles (à connaître)
+## 8. Limites actuelles (à connaître)
 - Les offres Entreprise ne sont pas encore facturées côté serveur : tous les comptes ont les limites de l'offre Standard (100 créées / 50 réalisées par trimestre).
 - Apple / Microsoft / Yahoo : non branchés (Google uniquement). Le paiement automatique CinetPay reste disponible (`PAYMENT_MODE=cinetpay`).
 - Contrôle d'identité : `KYC_MODE=auto` fait confiance aux informations saisies. Passez en `manual` pour valider vous-même chaque personne.

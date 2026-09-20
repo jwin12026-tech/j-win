@@ -23,9 +23,9 @@ async function register(phone, email, prenoms) { await call('POST', '/api/otp/se
 
 let T, U, V;
 test('accès : mot de passe requis, jeton utilisateur refusé', async () => {
-  assert.equal((await call('POST', '/api/admin/login', { password: 'faux' })).s, 401);
+  assert.equal((await call('POST', '/api/admin/login', { user: 'J-WIN', password: 'faux' })).s, 401);
   assert.equal((await call('GET', '/api/admin/stats')).s, 401);
-  T = (await call('POST', '/api/admin/login', { password: 'Sup3r-secret' })).j.token; assert.ok(T);
+  T = (await call('POST', '/api/admin/login', { user: 'J-WIN', password: 'Sup3r-secret' })).j.token; assert.ok(T);
   U = await register('0701100001', 'u1@example.com', 'Aya'); V = await register('0701100002', 'u2@example.com', 'Moussa');
   assert.equal((await call('GET', '/api/admin/stats', null, U.j.token)).s, 401);
   assert.equal((await call('GET', '/admin')).s, 200);
