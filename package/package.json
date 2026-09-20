@@ -1,0 +1,28 @@
+{
+  "name": "jwin-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API J-WIN : comptes, OTP SMS/WhatsApp, OCR de pièces d'identité, portefeuille, recharges et retraits CinetPay, factures",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/fra": "^1.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.1",
+    "sharp": "^0.33.5",
+    "tesseract.js": "^5.1.1"
+  }
+}
