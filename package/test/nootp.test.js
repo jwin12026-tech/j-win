@@ -44,9 +44,9 @@ test('limite de 3 missions réalisées sans vérification', async () => {
   await approveAll(T);
   const ids = []; for (const n of [1, 2, 3, 4]) ids.push((await mission(C.j.token, 'Autre ' + n)).j?.mission?.id);   // C : 3 créées puis refus
   assert.equal(ids.filter(Boolean).length, 3); await approveAll(T);
-  const market = (await call('GET', '/api/missions', null, B.j.token)).j.market; assert.ok(market.length >= 3);
-  for (const m of market.slice(0, 3)) assert.equal((await call('POST', `/api/missions/${encodeURIComponent(m.id)}/accept`, {}, B.j.token)).s, 200);
-  const r = await call('POST', `/api/missions/${encodeURIComponent(market[3].id)}/accept`, {}, B.j.token); assert.equal(r.s, 403); assert.match(r.j.error, /réalisées sans vérification/);
+  for (const id of ids.filter(Boolean)) { assert.equal((await call('POST', `/api/missions/${encodeURIComponent(id)}/apply`, {}, B.j.token)).s, 200); assert.equal((await call('POST', `/api/missions/${encodeURIComponent(id)}/choose`, { userId: B.j.user.id }, C.j.token)).s, 200); }
+  const other = (await call('GET', '/api/missions', null, B.j.token)).j.market[0];
+  const r = await call('POST', `/api/missions/${encodeURIComponent(other.id)}/apply`, {}, B.j.token); assert.equal(r.s, 403); assert.match(r.j.error, /réalisées sans vérification/);
 });
 test('vérification d\'identité : envoi des pièces, contrôle par l\'administrateur, limites levées', async () => {
   const send = (t, over = {}, files = ['front', 'back', 'selfie']) => { const fd = new FormData(); Object.entries({ type: 'cni', number: 'C0123456789', ocrNom: 'KONE', ocrPrenoms: 'Aya', ocrDob: '1992-03-03', ...over }).forEach(([k, v]) => fd.append(k, v)); files.forEach((f) => fd.append(f, new Blob([Buffer.from('img-' + f)], { type: 'image/jpeg' }), f + '.jpg')); return call('POST', '/api/kyc/submit', null, t, fd); };

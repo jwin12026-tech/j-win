@@ -883,6 +883,30 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 
 .grid-in{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-content:start}
 
+
+/* ===== v7 : candidatures, preuves, discussion ===== */
+.st-candidature{background:rgba(37,99,235,.14);color:var(--orange-text);border:1.5px dashed var(--orange)}
+.st-refusee{background:var(--bg2);color:var(--ink2);border:1.5px solid var(--line)}
+.st-terminee{background:rgba(217,119,6,.14);color:#92400e}
+.cand{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:.8rem;border:1.5px solid var(--line);border-radius:16px;background:var(--bg2)}
+.cand .acts2{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.av-s{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#60a5fa);color:#fff;display:grid;place-items:center;font-weight:800}
+.cands{display:grid;gap:10px}
+.proof{display:grid;gap:.6rem;padding:.9rem 1rem;border-radius:16px;border:1.5px solid var(--line);background:linear-gradient(135deg,rgba(37,99,235,.07),transparent)}
+.proof .txt{white-space:pre-line}
+.notice{padding:.8rem 1rem;border-radius:14px;border:1.5px solid var(--line);background:var(--bg2);display:grid;gap:.4rem}
+.notice.warn{border-color:#f59e0b;background:rgba(245,158,11,.1)}
+.contact{display:flex;gap:8px;flex-wrap:wrap}
+.chlog{display:grid;gap:8px;max-height:46vh;min-height:180px;overflow:auto;padding:10px;border-radius:16px;background:var(--bg2);align-content:start}
+.bub-c{max-width:82%;padding:.5rem .8rem;border-radius:16px;background:var(--bg);border:1px solid var(--line);white-space:pre-wrap;word-break:break-word}
+.bub-c.me{margin-left:auto;background:var(--orange);color:#fff;border-color:var(--orange)}
+.bub-c small{display:block;opacity:.7;font-size:.7rem;margin-top:2px}
+.chform{display:flex;gap:8px;margin-top:10px}.chform .input{flex:1}
+.thread{display:flex;gap:12px;align-items:center;padding:.7rem;border:1.5px solid var(--line);border-radius:14px;cursor:pointer;background:none;text-align:left;width:100%}
+.thread:hover{border-color:var(--orange)}
+.thread .dot{background:var(--red);color:#fff;border-radius:999px;font-size:.72rem;font-weight:800;padding:0 .45rem}
+.starpick{display:flex;gap:4px}.starpick button{border:0;background:none;cursor:pointer;color:var(--line);font-size:1.8rem;line-height:1}.starpick button.on{color:#f59e0b}
+
 /* required styles */
 
 .leaflet-pane,
@@ -1811,11 +1835,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
         </li>
         <li>
           <h3>Suivez l'avancement</h3>
-          <p>Un réalisateur accepte la mission. Vous pouvez lui demander de partager sa localisation pour vérification, puis modifier, dupliquer ou annuler la mission.</p>
+          <p>Des réalisateurs postulent : vous voyez leur nom, leurs prénoms et leur note J-WIN, puis vous choisissez. Vous discutez avec lui en ligne. Tant qu'aucun réalisateur n'est choisi, vous pouvez modifier ou annuler la mission ; une fois acceptée, seul l'administrateur peut l'annuler.</p>
         </li>
         <li>
           <h3>Validez et payez</h3>
-          <p>Validez le résultat dans J-WIN. Vous êtes notifié par SMS et par e-mail, et le réalisateur est payé automatiquement.</p>
+          <p>Le réalisateur envoie ses preuves (texte, photos, audio, lien). Vous les approuvez : votre portefeuille est débité, le réalisateur est payé et vous le notez. Chaque étape est notifiée dans l'application, par SMS et par e-mail.</p>
         </li>
       </ol>
 
@@ -1830,7 +1854,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         </li>
         <li>
           <h3>Acceptez et partagez votre position</h3>
-          <p>Lisez les conditions, acceptez la mission et partagez votre localisation pour vérification. Si la mission est ouverte aux propositions, vous pouvez proposer votre prix.</p>
+          <p>Lisez les conditions et postulez : le créateur voit votre nom et votre note J-WIN avant de vous choisir. Discutez avec lui, réalisez la mission, puis envoyez vos preuves pour être payé.</p>
         </li>
         <li>
           <h3>Réalisez la mission</h3>
@@ -2225,8 +2249,8 @@ window.JWIN_CONFIG = {
       <h2 class="au-h">Créez votre compte</h2>
       <p class="au-sub">Quelques informations suffisent, sans code à saisir. Vous pourrez vérifier votre pièce d'identité plus tard, dans vos paramètres.</p>
       <div class="seg2" role="tablist" aria-label="Méthode d'inscription">
-        <button type="button" role="tab" data-am="sso" aria-selected="true">Avec ma messagerie</button>
-        <button type="button" role="tab" data-am="phone" aria-selected="false">Avec mon numéro</button>
+        <button type="button" role="tab" data-am="phone" aria-selected="true">Avec mon numéro</button>
+        <button type="button" role="tab" data-am="sso" aria-selected="false">Avec mon e-mail (lien)</button>
       </div>
       <form class="au-form" id="fSignup" data-method="sso" novalidate>
         <div class="row2">
@@ -2293,7 +2317,7 @@ window.JWIN_CONFIG = {
           <button class="btn btn-ghost" type="button" data-act="code-send" data-ch="whatsapp"><svg class="lg lg-mark" aria-hidden="true"><use href="#l-whatsapp"/></svg>Recevoir par WhatsApp</button>
         </div>
       </form>
-      <p class="or">ou continuer avec</p>
+      <p class="or">ou recevoir un lien de connexion par e-mail</p>
       <div class="sso" data-sso data-ctx="login"></div>
       <p class="au-alt">Nouveau sur J-WIN ? <button class="link" type="button" data-act="auth-signup">Créer un compte</button></p>
       <p class="au-alt"><button class="link" type="button" data-act="demo">Explorer l'espace de démonstration</button></p>
@@ -2400,6 +2424,7 @@ window.JWIN_CONFIG = {
     <header class="app-top">
       <h1 class="app-h" id="viewTitle" style="font-size:clamp(1.25rem,2.4vw,1.7rem)">Tableau de bord</h1>
       <div class="top-actions">
+        <button class="icon-btn" type="button" data-act="msgs" aria-label="Messages"><span aria-hidden="true">💬</span><span class="badge" data-badge2 hidden>0</span></button>
         <button class="icon-btn" type="button" data-act="go" data-v="notifs" aria-label="Notifications"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span class="badge" data-badge hidden>0</span></button>
         <button class="icon-btn" type="button" data-act="chat" aria-label="Assistant J-WIN"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg></button>
         <button class="icon-btn" type="button" data-act="theme" aria-label="Basculer entre mode clair et mode sombre"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg></button>
@@ -2835,7 +2860,7 @@ const CATS={
   enligne:{n:'En ligne et sondage',e:'💻',g:['#0e7490','#67e8f9']}
 };
 const ADMIN=Object.assign({om:'+225 07 88 33 02 48',wa:'2250788330248',mail:'jwin1.2026@gmail.com'},EXT.ADMIN||{});
-const STLAB={attente:'En attente',cours:'En cours',terminee:'Terminée',payee:'Payée',annulee:'Annulée',modp:"En attente d'approbation",rejetee:'Refusée'};
+const STLAB={attente:'En attente',cours:'En cours',terminee:'Preuves envoyées',payee:'Payée',annulee:'Annulée',modp:"En attente d'approbation",rejetee:'Refusée',candidature:'Candidature envoyée',refusee:'Non retenue'};
 const TITLES={dashboard:'Tableau de bord',missions:'Missions',history:'Historique des WIN',wallet:'Portefeuille',notifs:'Notifications',settings:'Paramètres'};
 const MARKET=[
   ['J-RST41/2026','Visiter Resto +',"Visitez le restaurant RESTO +, à Cocody Riviera Golf en face du siège d'Orange, et donnez votre avis sur l'accueil et la cuisine.",'Cocody',6500,'Kouamé',4.8,0],
@@ -2922,7 +2947,7 @@ const API={
 const DEMO={id:'demo',nom:'Koffi',prenoms:'Aya',annee:1994,naissance:'1994-05-14',adresse:'Cocody, Riviera Golf',contact:'0700000000',email:'aya.demo@example.com',provider:'demo'};
 let user=null,S=null;
 const UI={view:'dashboard',dPeriod:'mois',wPeriod:'mois',hRole:'real',hStatus:'all',sel:null,dlgMission:null,pay:null,create:null};
-const A={method:'sso',lt:'pw',otp:null,tick:null,sso:null,plan:null,fails:0,lock:0,cfm:null,reset:null};
+const A={method:'phone',lt:'pw',otp:null,tick:null,sso:null,plan:null,fails:0,lock:0,cfm:null,reset:null};
 const saveS=()=>{if(user)store.set('jwin-app-v1:'+user.id,S)};
 const rid=()=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];return 'J-'+s+'/'+new Date().getFullYear()};
 
@@ -2980,9 +3005,11 @@ function ask(title,text,ok){
   return new Promise(res=>{$('#cfmTitle').textContent=title;$('#cfmText').textContent=text;$('#cfmYes').textContent=ok||'Confirmer';A.cfm=res;openD(cfm)});
 }
 function dlgOpen(title,html,wide){
+  UI.dlgKind=null;
   UI.dlgMission=null;$('#dlgTitle').textContent=title;$('#dlgBody').innerHTML=html;dlg.classList.toggle('wide',!!wide);openD(dlg);dlg.scrollTop=0;
 }
-function dlgClose(){UI.dlgMission=null;if(dlg.open)dlg.close()}
+function dlgClose(){
+  if(typeof CH!=='undefined'){CH.key=null;clearInterval(CH.timer)}UI.dlgMission=null;if(dlg.open)dlg.close()}
 
 /* =====================================================================
    AUTHENTIFICATION
@@ -3329,7 +3356,8 @@ function enterApp(u,o){
   A.identity=null;
   document.body.classList.add('in-app');
   go('dashboard');refreshSiteNav();
-  if(LIVE){syncWallet();syncMissions()}
+  if(!S.chats)S.chats={};
+  if(LIVE){syncWallet();syncMissions();UI.lastSid=null;syncNotifs();clearInterval(UI.poll);UI.poll=setInterval(()=>{if(!document.hidden&&user)syncNotifs()},15000)}
   if(o.welcome){
     const n=u.prenoms.split(' ')[0];
     notify('star','Vérifiez votre identité','Sans vérification, vous pouvez créer et réaliser '+UNVER()+' missions. Envoyez votre pièce d\'identité et un selfie depuis Paramètres pour lever cette limite et retirer vos gains.');saveS();
@@ -3358,6 +3386,7 @@ async function syncWallet(){
   }
 }
 function leaveApp(){
+  clearInterval(UI.poll);
   document.body.classList.remove('in-app');$('#chat').classList.remove('open');window.scrollTo(0,0);refreshSiteNav();
 }
 async function logout(){
@@ -3380,7 +3409,7 @@ const initials=()=>((user.prenoms||'?')[0]+(user.nom||'')[0]).toUpperCase();
 const firstName=()=>(user.prenoms||'').split(' ')[0];
 const fullName=()=>(user.prenoms+' '+user.nom).trim();
 const planOf=()=>PLANS[S.plan]||PLANS.standard;
-function usage(k){const lim=isVer()?Date.now()-planOf().days*DAY:0;return S.mine.filter(m=>k==='create'?(m.role==='donneur'&&m.status!=='annulee'&&m.mod!=='rejetee'&&m.createdAt>=lim):(m.role==='real'&&m.status!=='annulee'&&(m.acceptedAt||m.createdAt)>=lim)).length}
+function usage(k){const lim=isVer()?Date.now()-planOf().days*DAY:0;return S.mine.filter(m=>k==='create'?(m.role==='donneur'&&m.status!=='annulee'&&m.mod!=='rejetee'&&m.createdAt>=lim):(m.role==='real'&&!['annulee','candidature','refusee'].includes(m.status)&&(m.acceptedAt||m.createdAt)>=lim)).length}
 const quotaLimit=k=>isVer()?planOf().q[k]:UNVER();
 function quotaLeft(k){const q=quotaLimit(k);return q===Infinity?Infinity:Math.max(0,q-usage(k))}
 const activeMissions=()=>S.mine.filter(m=>['attente','cours','terminee'].includes(m.status)&&m.mod!=='rejetee');
@@ -3452,12 +3481,12 @@ function rowMarket(m,sel){
   const c=CATS[m.cat]||CATS.visite,own=m.role==='donneur';
   const where=m.mode==='remote'?'<span class="pill remote">🌐 À distance</span>':'<span class="pill">📍 '+esc(m.city)+'</span>';
   const media=(m.images&&m.images.length?'<span>🖼️ '+m.images.length+'</span>':'')+(m.audio?'<span>🎧 vocal</span>':'');
-  return `<article class="mrow${sel?' sel':''}${own?' own':''}" data-mid="${esc(m.id)}">${thumb(m)}<div><h4>${esc(m.title)}</h4><p class="mdesc">${esc(m.desc||'')}</p><div class="meta">${where}<span>${esc(c.n)}</span>${media}<span>${own?'Votre mission':'Par '+esc(m.by)+(m.rating?' · ★ '+String(m.rating).replace('.',','):'')}</span></div></div><div class="acts"><span class="amt">${F(m.amount)}</span><button class="btn btn-ghost" type="button" data-act="m-view" data-id="${esc(m.id)}">Voir</button>${own?'':`<button class="btn btn-primary" type="button" data-act="m-accept" data-id="${esc(m.id)}">Accepter</button>`}</div></article>`;
+  return `<article class="mrow${sel?' sel':''}${own?' own':''}" data-mid="${esc(m.id)}">${thumb(m)}<div><h4>${esc(m.title)}</h4><p class="mdesc">${esc(m.desc||'')}</p><div class="meta">${where}<span>${esc(c.n)}</span>${media}<span>${own?'Votre mission':'Par '+esc(m.by)+(m.rating?' · ★ '+String(m.rating).replace('.',','):'')}</span></div></div><div class="acts"><span class="amt">${F(m.amount)}</span><button class="btn btn-ghost" type="button" data-act="m-view" data-id="${esc(m.id)}">Voir</button>${own?'':`<button class="btn btn-primary" type="button" data-act="m-accept" data-id="${esc(m.id)}">Postuler</button>`}</div></article>`;
 }
 function rowMine(m){
   let primary='';
-  if(m.role==='real'&&m.status==='cours')primary=`<button class="btn btn-primary" type="button" data-act="m-done" data-id="${esc(m.id)}">J'ai terminé</button>`;
-  else if(m.role==='donneur'&&m.status==='terminee')primary=`<button class="btn btn-primary" type="button" data-act="m-validate" data-id="${esc(m.id)}">Valider et payer</button>`;
+  if(m.role==='real'&&m.status==='cours')primary=`<button class="btn btn-primary" type="button" data-act="m-proof" data-id="${esc(m.id)}">Envoyer mes preuves</button>`;
+  else if(m.role==='donneur'&&m.status==='terminee')primary=`<button class="btn btn-primary" type="button" data-act="m-validate" data-id="${esc(m.id)}">Examiner et payer</button>`;
   else if(m.role==='real'&&m.status==='payee')primary=starsHtml(m.id,m.myRating||0);
   const who=m.role==='real'?'Initié par '+esc(m.by):(m.realisateur?'Réalisé par '+esc(m.realisateur):'Publiée par vous');
   const date=m.doneAt?'Payée le '+fdate(m.doneAt):'Lancée le '+fdate(m.createdAt);
@@ -3480,7 +3509,7 @@ function renderDashboard(){
   $('#totals').innerHTML=`<div style="--c:var(--line)"><b>${cnt('attente')}</b><span>En attente</span></div><div style="--c:var(--ok)"><b>${S.mine.filter(m=>m.role==='real'&&m.status==='payee').length}</b><span>Réalisées</span></div><div style="--c:var(--red)"><b>${cnt('annulee')}</b><span>Annulées</span></div><div style="--c:var(--orange)"><b>${cnt('terminee')}</b><span>Terminées</span></div>`;
   const ad=(S.profile.adresse||'').toLowerCase();
   const near=marketList().filter(m=>m.role!=='donneur').sort((a,b)=>(ad.includes(b.city.toLowerCase())?1:0)-(ad.includes(a.city.toLowerCase())?1:0)||a.amount-b.amount).slice(0,4);
-  $('#nearList').innerHTML=near.length?near.map(m=>`<article class="mrow" style="grid-template-columns:auto 1fr">${winTag(m.win)}<div><h4>${esc(m.title)}</h4><div class="meta"><span>${esc(m.city)}</span><span>${F(m.amount)}</span></div></div><div class="acts" style="grid-column:1/-1;justify-content:flex-start"><button class="btn btn-ghost" type="button" data-act="m-view" data-id="${esc(m.id)}">Voir</button><button class="btn btn-primary" type="button" data-act="m-accept" data-id="${esc(m.id)}">Accepter</button></div></article>`).join(''):emptyBox('Aucune mission disponible','Revenez bientôt ou lancez votre propre mission.','<button class="btn btn-primary btn-sm" type="button" data-act="create">Créer une mission</button>');
+  $('#nearList').innerHTML=near.length?near.map(m=>`<article class="mrow" style="grid-template-columns:auto 1fr">${winTag(m.win)}<div><h4>${esc(m.title)}</h4><div class="meta"><span>${esc(m.city)}</span><span>${F(m.amount)}</span></div></div><div class="acts" style="grid-column:1/-1;justify-content:flex-start"><button class="btn btn-ghost" type="button" data-act="m-view" data-id="${esc(m.id)}">Voir</button><button class="btn btn-primary" type="button" data-act="m-accept" data-id="${esc(m.id)}">Postuler</button></div></article>`).join(''):emptyBox('Aucune mission disponible','Revenez bientôt ou lancez votre propre mission.','<button class="btn btn-primary btn-sm" type="button" data-act="create">Créer une mission</button>');
   renderActive();
 }
 function renderActive(){
@@ -3524,7 +3553,7 @@ function renderMissions(){
 }
 function renderHistory(){
   $$('#hRole button').forEach(b=>b.setAttribute('aria-selected',b.dataset.r===UI.hRole?'true':'false'));
-  const st=[['all','Tous'],['attente','En attente'],['cours','En cours'],['terminee','Terminée'],['payee','Payée'],['annulee','Annulée']];
+  const st=[['all','Tous'],['attente','En attente'],['cours','En cours'],['candidature','Candidature'],['terminee','Preuves envoyées'],['payee','Payée'],['annulee','Annulée']];
   $('#hStatus').innerHTML=st.map(s=>`<button class="fchip" type="button" data-act="h-status" data-s="${s[0]}" aria-pressed="${UI.hStatus===s[0]}">${s[1]}</button>`).join('');
   const f=filt('h');
   const list=S.mine.filter(m=>m.role===UI.hRole&&(UI.hStatus==='all'||m.status===UI.hStatus)&&matchM(m,f)).sort((a,b)=>(b.doneAt||b.createdAt)-(a.doneAt||a.createdAt));
@@ -3552,7 +3581,7 @@ function renderNotifs(){
   const nd=$('#notifDemo');if(nd)nd.hidden=!CONFIG.DEMO;
   const un=S.notifs.filter(n=>!n.read).length;
   $('#nCount').textContent=un?un+' non lue'+(un>1?'s':''):'Tout est lu';
-  $('#nList').innerHTML=S.notifs.length?S.notifs.map(n=>`<article class="notif${n.read?'':' unread'}"><span class="ico">${ico(n.type||'bell')}</span><div><b>${esc(n.title)}</b><p>${esc(n.text)}</p>${n.chan&&n.chan.length?`<div style="margin-top:.4rem">${n.chan.map(c=>`<span class="chan">${c==='sms'?'SMS':'E-mail'}</span>`).join('')}</div>`:''}</div><small>${fdate(n.at)}</small></article>`).join(''):emptyBox('Aucune notification','Vous serez prévenu ici, et par SMS et e-mail, à chaque étape d\'une mission.','');
+  $('#nList').innerHTML=S.notifs.length?S.notifs.map(n=>`<article class="notif${n.read?'':' unread'}"${n.mid?` data-act="notif-open" data-mid="${esc(n.mid)}" style="cursor:pointer"`:''}><span class="ico">${ico(n.type==='user'?'bell':(n.type||'bell'))}</span><div><b>${esc(n.title)}</b><p>${esc(n.text)}</p>${n.chan&&n.chan.length?`<div style="margin-top:.4rem">${n.chan.map(c=>`<span class="chan">${c==='sms'?'SMS':'E-mail'}</span>`).join('')}</div>`:''}</div><small>${fdate(n.at)}</small></article>`).join(''):emptyBox('Aucune notification','Vous serez prévenu ici, et par SMS et e-mail, à chaque étape d\'une mission.','');
 }
 function renderSettings(){
   const kv=[['Nom',esc(user.nom)],['Prénoms',esc(user.prenoms)],['Naissance',user.naissance?isoToFr(user.naissance)+' ('+ageOf(user.naissance)+' ans)':(new Date().getFullYear()-user.annee)+' ans (né(e) en '+user.annee+')'],['Contact',user.contact?'+225 '+esc(fmtPhone(user.contact)):'Non renseigné'],['E-mail',user.email?esc(user.email):'Non renseigné'],['Localisation',esc(S.profile.adresse||'Non renseignée')],['Connexion',user.provider==='phone'||user.provider==='demo'?'Numéro et mot de passe':'Messagerie ('+esc((PROV[user.provider]||{}).n||user.provider)+')']];
@@ -3574,6 +3603,7 @@ function refreshChrome(){
   $$('[data-uplan]').forEach(e=>e.textContent='Offre '+planOf().n);
   const un=S.notifs.filter(n=>!n.read).length;
   $$('[data-badge]').forEach(b=>{b.hidden=!un;b.textContent=un});
+  $$('[data-badge2]').forEach(b=>{const n=UI.chatUnread||0;b.hidden=!n;b.textContent=n});
 }
 function render(){
   if(!S)return;
@@ -3588,31 +3618,130 @@ function go(v){
   render();window.scrollTo(0,0);
   if(LIVE&&v==='wallet')syncWallet();
   if(LIVE&&(v==='settings'||v==='dashboard'))syncMe();
+  if(LIVE)syncNotifs();
   if(LIVE&&(v==='missions'||v==='dashboard'||v==='history'))syncMissions();
 }
 function commit(){saveS();render();if(dlg.open&&UI.dlgMission)openMission(UI.dlgMission,true)}
 
 /* ---------- vérification d'identité ---------- */
 function needKyc(){return false}
+/* ---------- discussion créateur / réalisateur ---------- */
+const CH={key:null,timer:null,last:0,msgs:[],mid:null,cid:null};
+const CHBOT=['D\'accord, merci pour l\'information.','Bien reçu, je m\'en occupe.','Parfait, on se tient au courant ici.','Pouvez-vous me confirmer l\'heure ?'];
+async function openChat(mid,cid){
+  const m=findM(mid);if(!m)return;
+  const key=mid+'|'+cid;CH.key=key;CH.last=0;CH.msgs=[];CH.mid=mid;CH.cid=cid;
+  const who=(m.counterpart&&m.role!=='donneur'?m.counterpart.name:'')||(m.role==='donneur'?((m.candidates||[]).find(x=>x.userId===cid)||m.counterpart||{}).name:'')||'Correspondant';
+  dlgOpen('Discussion · '+who,`<div id="chHead" class="contact" style="margin-bottom:.6rem"></div><div class="chlog" id="chLog" aria-live="polite"></div><form class="chform" id="chForm"><input class="input" id="chIn" maxlength="1000" placeholder="Écrivez votre message…" autocomplete="off"><button class="btn btn-primary" type="submit">Envoyer</button></form><p class="hint">Discussion privée liée à « ${esc(m.title)} ». L'administrateur J-WIN peut la consulter en cas de litige.</p>`,true);
+  await chatLoad(true);
+  clearInterval(CH.timer);CH.timer=setInterval(()=>{if(!dlg.open||CH.key!==key){clearInterval(CH.timer);return}chatLoad(false)},4000);
+  setTimeout(()=>{const i=$('#chIn');if(i)i.focus()},80);
+}
+async function chatLoad(first){
+  if(!CH.key)return;
+  if(LIVE){
+    try{const r=await http('/api/chats/'+encodeURIComponent(CH.mid)+'/'+encodeURIComponent(CH.cid)+(first?'':'?after='+CH.last));renderChat(r,first);if(first)syncNotifs()}
+    catch(e){if(first&&$('#chLog'))$('#chLog').innerHTML='<p class="muted">'+esc(e.message)+'</p>'}
+  }else{
+    const m=findM(CH.mid),arr=(S.chats&&S.chats[CH.key])||[];
+    renderChat({phone:m&&m.counterpart&&m.status!=='candidature'?m.counterpart.phone:'',messages:arr.map((x,i)=>({id:i+1,mine:x.mine,text:x.text,at:x.at}))},true);
+  }
+}
+function renderChat(r,first){
+  const log=$('#chLog');if(!log)return;
+  if(first){CH.msgs=[];const hd=$('#chHead'),d=telDigits(r.phone);if(hd)hd.innerHTML=d?`<a class="btn btn-ghost btn-sm btn-link" href="tel:+225${d}">📞 Appeler ${esc(fmtPhone(d))}</a><a class="btn btn-ghost btn-sm btn-link" href="https://wa.me/225${d}" target="_blank" rel="noopener">WhatsApp</a>`:'<small class="muted">Le numéro de téléphone est partagé dès que le créateur choisit le réalisateur.</small>'}
+  const add=(r.messages||[]).filter(x=>!CH.msgs.some(y=>y.id===x.id));
+  if(!add.length&&!first)return;
+  CH.msgs=first?(r.messages||[]):CH.msgs.concat(add);CH.last=CH.msgs.reduce((a,x)=>Math.max(a,x.id),0);
+  const near=log.scrollHeight-log.scrollTop-log.clientHeight<80||first;
+  log.innerHTML=CH.msgs.length?CH.msgs.map(x=>`<div class="bub-c${x.mine?' me':''}">${esc(x.text).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">$1</a>')}<small>${fdate(x.at)}</small></div>`).join(''):'<p class="muted">Aucun message. Dites bonjour !</p>';
+  if(near)log.scrollTop=log.scrollHeight;
+}
+async function chatSend(text){
+  if(!CH.key||!text.trim())return;
+  if(LIVE){try{await http('/api/chats/'+encodeURIComponent(CH.mid)+'/'+encodeURIComponent(CH.cid),{body:{text}});await chatLoad(false)}catch(e){toast(e.message)}return}
+  S.chats=S.chats||{};const arr=S.chats[CH.key]=S.chats[CH.key]||[];arr.push({mine:true,text,at:Date.now()});saveS();chatLoad(true);
+  const key=CH.key;setTimeout(()=>{arr.push({mine:false,text:CHBOT[arr.length%CHBOT.length],at:Date.now()});saveS();if(CH.key===key&&dlg.open)chatLoad(true)},1300);
+}
+async function openMsgs(){
+  let th=[];
+  if(LIVE){try{th=(await http('/api/chats')).threads}catch(e){return toast(e.message)}}
+  else{th=Object.keys(S.chats||{}).map(k=>{const [mid,cid]=k.split('|'),m=findM(mid),arr=S.chats[k];return m&&arr.length?{missionId:mid,candidateId:cid,title:m.title,with:(m.counterpart&&m.counterpart.name)||'Correspondant',last:{text:arr[arr.length-1].text,mine:arr[arr.length-1].mine},unread:0}:null}).filter(Boolean)}
+  dlgOpen('Messages',th.length?`<div style="display:grid;gap:.6rem">${th.map(t=>`<button class="thread" type="button" data-act="thread-open" data-m="${esc(t.missionId)}" data-c="${esc(t.candidateId)}"><span class="av-s">${esc(nIni(t.with))}</span><span style="flex:1;min-width:0"><b>${esc(t.with)}</b> <small class="muted">· ${esc(t.title)}</small><br><small class="muted">${t.last?(t.last.mine?'Vous : ':'')+esc(String(t.last.text).slice(0,70)):'Aucun message'}</small></span>${t.unread?`<span class="dot">${t.unread}</span>`:''}</button>`).join('')}</div>`:emptyBox('Aucune discussion','La discussion s\'ouvre dès qu\'un réalisateur postule à une mission : ouvrez la mission puis « Discuter ».',''));
+}
+async function syncNotifs(){
+  if(!LIVE||!user)return;
+  try{
+    const r=await http('/api/notifications'),maxSid=r.items.reduce((a,n)=>Math.max(a,n.id),0),fresh=UI.lastSid!=null&&maxSid>UI.lastSid;
+    S.notifs=r.items.map(n=>({id:'s'+n.id,sid:n.id,type:n.type==='user'?'bell':(n.type||'bell'),title:n.title,text:n.text,at:n.at,read:n.read,mid:n.missionId,chan:[]}));
+    UI.lastSid=maxSid;UI.chatUnread=r.chats||0;
+    if(fresh){toast(r.items[0].title);await syncMissions();syncWallet();if(dlg.open&&UI.dlgKind==='mission'&&UI.dlgMission&&findM(UI.dlgMission))openMission(UI.dlgMission,true)}
+    refreshChrome();if(UI.view==='notifs')renderNotifs();
+  }catch(e){}
+}
+
+/* ---------- personnes, notes, contacts ---------- */
+const nIni=n=>String(n||'?').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+const rateTxt=c=>c&&c.rating?'★ '+String(c.rating).replace('.',',')+'/5 ('+c.reviews+' avis)':'Nouveau, pas encore noté';
+const safeUrl=u=>/^https?:\/\//i.test(u)?u:'#';
+const telDigits=p=>String(p||'').replace(/\D/g,'').replace(/^225/,'');
+function cpCard(c,extra){
+  return `<div class="cand"><span class="av-s">${esc(nIni(c.name))}</span><div><b>${esc(c.name)}</b>${c.verified?' <span class="st st-payee">Identité vérifiée</span>':''}<br><small>${esc(rateTxt(c))} · ${c.done||0} mission${(c.done||0)>1?'s':''} réalisée${(c.done||0)>1?'s':''}</small>${c.message?`<p class="muted" style="margin:.3rem 0 0">« ${esc(c.message)} »</p>`:''}</div>${extra?`<div class="acts2">${extra}</div>`:''}</div>`;
+}
+function contactBtns(m,cid,phone){
+  const d=telDigits(phone);
+  return `<button class="btn btn-primary btn-sm" type="button" data-act="m-chat" data-id="${esc(m.id)}" data-u="${esc(cid||'')}">💬 Discuter</button>`+(d?`<a class="btn btn-ghost btn-sm btn-link" href="tel:+225${d}">📞 Appeler</a><a class="btn btn-ghost btn-sm btn-link" href="https://wa.me/225${d}" target="_blank" rel="noopener">WhatsApp</a>`:'');
+}
+function proofHtml(p){
+  if(!p)return '';
+  return `<div class="proof"><b>Preuves du réalisateur</b>${p.text?`<div class="txt">${esc(p.text)}</div>`:''}${p.link?`<div>🔗 <a href="${esc(safeUrl(p.link))}" target="_blank" rel="noopener noreferrer">${esc(p.link)}</a></div>`:''}${p.images&&p.images.length?`<div class="gallery">${p.images.map((u,i)=>`<button type="button" data-act="img-open" data-k="proof" data-i="${i}" aria-label="Agrandir la preuve ${i+1}"><img src="${esc(mu(u))}" alt="Preuve ${i+1}" loading="lazy"></button>`).join('')}</div>`:''}${p.audio?`<div class="audio-card"><b>🎧 Message vocal</b><audio controls preload="metadata" src="${esc(mu(p.audio))}"></audio></div>`:''}${p.at?`<small class="muted">Envoyées le ${fdate(p.at)}</small>`:''}</div>`;
+}
+function starsExec(id,val){return `<span class="stars" role="group" aria-label="Noter le réalisateur">${[1,2,3,4,5].map(n=>`<button type="button" data-act="m-rate-exec" data-id="${esc(id)}" data-n="${n}" class="${n<=val?'on':''}" aria-label="${n} sur 5">${ico('star')}</button>`).join('')}</span>`}
+const DEMO_PEOPLE=[{userId:'d1',name:'Moussa KONÉ',rating:4.6,reviews:12,done:9,verified:true,phone:'0700000001',message:'Bonjour, je suis disponible tout de suite.'},{userId:'d2',name:'Awa TRAORÉ',rating:4.9,reviews:31,done:27,verified:true,phone:'0500000002',message:'Je peux commencer aujourd\'hui.'},{userId:'d3',name:'Yao KOUASSI',rating:null,reviews:0,done:0,verified:false,phone:'0100000003',message:''}];
+
 /* ---------- détail d'une mission ---------- */
 const MAP_ROUTE=`<svg class="md-map" viewBox="0 0 260 130" role="img" aria-label="Itinéraire vers la mission"><rect width="260" height="130" fill="#1d2430"/><g stroke="#39445a" stroke-width="8" fill="none" stroke-linecap="round"><path d="M-10 42L120 58 270 22"/><path d="M30-10L62 140"/><path d="M142-10L120 140"/><path d="M-10 100L270 84"/><path d="M204-10L232 140"/></g><path d="M62 112L60 84 120 56 138 28 204 20 226 38" stroke="#3b82f6" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><circle cx="62" cy="112" r="6" fill="#fff" stroke="#3b82f6" stroke-width="3"/><path d="M226 20c-6.6 0-11 4.8-11 10.4 0 7.2 11 17.6 11 17.6s11-10.4 11-17.6C237 24.8 232.6 20 226 20z" fill="#e8202f"/><circle cx="226" cy="30" r="4" fill="#fff"/></svg>`;
 function openMission(id,keep){
   const m=findM(id);if(!m)return;
   UI.sel=id;
-  const mine=!!m.role,own=m.role==='donneur',c=CATS[m.cat]||CATS.visite,st=statusOf(m),links=mapLinks(m),pending=m.mod==='pending';
-  const b=[];
+  const mine=!!m.role,own=m.role==='donneur',real=m.role==='real',c=CATS[m.cat]||CATS.visite,st=statusOf(m),links=mapLinks(m),pending=m.mod==='pending',cp=m.counterpart,cands=m.candidates||[];
+  const b=[];let flow='';
+  const adminWa='https://wa.me/'+ADMIN.wa+'?text='+encodeURIComponent('Bonjour J-WIN, je souhaite annuler la mission '+m.id+' ('+m.title+') : ');
   if(!mine){
     const need=m.askLoc&&m.mode!=='remote';
-    b.push((need?`<label class="check"><input type="checkbox" id="shareLoc"><span>J'accepte de partager ma position à mon arrivée sur place (demandé par le donneur).</span></label>`:'')+`<button class="btn btn-primary" type="button" data-act="m-accept-ok" data-id="${esc(m.id)}" id="accBtn" ${need?'disabled':''}>Accepter la mission</button>`);
-  }else if(m.role==='real'){
-    if(m.status==='cours')b.push(`<button class="btn btn-primary" type="button" data-act="m-done" data-id="${esc(m.id)}">J'ai terminé la mission</button>`,`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Annuler la mission</button>`);
-    if(m.status==='terminee'&&CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : simuler la validation du donneur</button>`);
-    if(m.status==='payee')b.push(`<div><small class="muted">Notez le donneur de mission</small><br>${starsHtml(m.id,m.myRating||0)}</div>`);
+    flow=`<div class="notice"><b>Postuler à cette mission</b><p class="muted">Le créateur choisit son réalisateur : il verra votre nom, vos prénoms et votre note J-WIN avant de décider.</p><div class="field"><label for="apMsg">Message au créateur (facultatif)</label><textarea class="input" id="apMsg" rows="2" maxlength="300" placeholder="Ex. Je suis disponible aujourd'hui."></textarea></div>${need?`<label class="check"><input type="checkbox" id="shareLoc"><span>J'accepte de partager ma position à mon arrivée sur place (demandé par le créateur).</span></label>`:''}</div>`;
+    b.push(`<button class="btn btn-primary" type="button" data-act="m-accept-ok" data-id="${esc(m.id)}" id="accBtn" ${need?'disabled':''}>Postuler à la mission</button>`);
+  }else if(real){
+    if(m.status==='candidature'){
+      flow=`<div class="notice"><b>⏳ Candidature envoyée</b><p class="muted">Le créateur examine votre profil. Vous serez prévenu dès sa décision.</p></div>${cp?`<div><b>Créateur de la mission</b>${cpCard(cp)}</div>`:''}`;
+      b.push(`<button class="btn btn-primary" type="button" data-act="m-chat" data-id="${esc(m.id)}" data-u="me">💬 Discuter avec le créateur</button>`,`<button class="btn btn-ghost btn-danger" type="button" data-act="m-withdraw-app" data-id="${esc(m.id)}">Retirer ma candidature</button>`);
+      if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : le créateur vous choisit</button>`);
+    }else if(m.status==='refusee'){
+      flow=`<div class="notice"><b>Candidature non retenue</b><p class="muted">Le créateur a choisi un autre réalisateur. Retrouvez d'autres missions dans l'onglet Missions.</p></div>`;
+    }else{
+      if(cp)flow+=`<div><b>Créateur de la mission</b>${cpCard(cp,contactBtns(m,'me',cp.phone))}</div>`;
+      if(m.status==='cours'){
+        if(m.proofNote)flow+=`<div class="notice warn"><b>Le créateur demande une correction</b><p>${esc(m.proofNote)}</p></div>`;
+        b.push(`<button class="btn btn-primary" type="button" data-act="m-proof" data-id="${esc(m.id)}">Envoyer mes preuves</button>`,`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Me retirer de la mission</button>`);
+      }
+      if(m.status==='terminee'){flow+=proofHtml(m.proof)+`<div class="notice"><b>⏳ En attente d'approbation</b><p class="muted">Le créateur examine vos preuves. Il sera débité et vous serez payé dès son approbation.</p></div>`;if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : le créateur approuve</button>`)}
+      if(m.status==='payee'){flow+=proofHtml(m.proof)+(m.execRating?`<div class="notice"><b>Le créateur vous a noté ${m.execRating}/5</b>${m.execReview?`<p class="muted">« ${esc(m.execReview)} »</p>`:''}</div>`:'')+`<div><small class="muted">Notez le créateur de la mission</small><br>${starsHtml(m.id,m.myRating||0)}</div>`}
+    }
   }else{
     if(pending){b.push(`<button class="btn btn-ghost" type="button" data-act="m-edit" data-id="${esc(m.id)}">Modifier</button>`,`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Annuler la mission</button>`);if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : simuler l'approbation de l'administrateur</button>`)}
-    else if(m.status==='attente'&&m.mod!=='rejetee'){b.push(`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Annuler la mission</button>`);if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : simuler l'acceptation par un réalisateur</button>`)}
-    if(m.status==='cours'){b.push(`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Annuler la mission</button>`);if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : simuler la fin de la mission</button>`)}
-    if(m.status==='terminee')b.push(`<button class="btn btn-primary" type="button" data-act="m-validate" data-id="${esc(m.id)}">Valider le résultat et payer ${F(m.amount)}</button>`);
+    else if(m.status==='attente'&&m.mod!=='rejetee'){
+      flow=`<div><b>Candidatures (${cands.length})</b>${cands.length?`<div class="cands" style="margin-top:.5rem">${cands.map(x=>cpCard(x,`<button class="btn btn-ghost btn-sm" type="button" data-act="m-chat" data-id="${esc(m.id)}" data-u="${esc(x.userId)}">💬 Discuter</button><button class="btn btn-ghost btn-sm btn-danger" type="button" data-act="m-decline" data-id="${esc(m.id)}" data-u="${esc(x.userId)}">Refuser</button><button class="btn btn-primary btn-sm" type="button" data-act="m-choose" data-id="${esc(m.id)}" data-u="${esc(x.userId)}">Choisir ce réalisateur</button>`)).join('')}</div>`:'<p class="muted">Aucune candidature pour le moment. Vous serez notifié dès qu\'un réalisateur postule.</p>'}</div><p class="hint">Vous pouvez annuler cette mission tant qu'aucun réalisateur n'est choisi.</p>`;
+      b.push(`<button class="btn btn-ghost btn-danger" type="button" data-act="m-cancel" data-id="${esc(m.id)}">Annuler la mission</button>`);
+      if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : simuler des candidatures</button>`);
+    }
+    if(['cours','terminee','payee'].includes(m.status)&&cp)flow+=`<div><b>Réalisateur</b>${cpCard(cp,contactBtns(m,cp.id||cp.userId,cp.phone))}</div>`;
+    if(m.status==='cours'){
+      flow+=`<div class="notice"><b>Mission acceptée</b><p class="muted">Une mission acceptée ne peut plus être annulée par son créateur : seul l'administrateur J-WIN peut l'annuler. <a href="${adminWa}" target="_blank" rel="noopener">Contacter J-WIN sur WhatsApp</a></p></div>`;
+      if(m.proofNote)flow+=`<div class="notice"><b>Correction demandée</b><p class="muted">${esc(m.proofNote)}</p></div>`;
+      if(CONFIG.DEMO)b.push(`<button class="btn btn-ghost" type="button" data-act="m-sim" data-id="${esc(m.id)}">Démo : le réalisateur envoie ses preuves</button>`);
+    }
+    if(m.status==='terminee'){flow+=proofHtml(m.proof);b.push(`<button class="btn btn-primary" type="button" data-act="m-validate" data-id="${esc(m.id)}">Examiner et payer ${F(m.amount)}</button>`)}
+    if(m.status==='payee'){flow+=proofHtml(m.proof)+(m.execRating?`<div class="notice"><b>Votre note : ${m.execRating}/5</b>${m.execReview?`<p class="muted">« ${esc(m.execReview)} »</p>`:''}</div>`:`<div><small class="muted">Notez la prestation du réalisateur</small><br>${starsExec(m.id,0)}</div>`)}
     b.push(`<button class="btn btn-ghost" type="button" data-act="m-dup" data-id="${esc(m.id)}">Dupliquer</button>`);
   }
   if(mine&&['annulee','terminee','cours'].includes(m.status))b.push(`<button class="link" type="button" data-act="m-claim" data-id="${esc(m.id)}">Signaler un problème</button>`);
@@ -3627,34 +3756,99 @@ function openMission(id,keep){
       <p class="muted">${esc(m.id)} · ${own?'Publiée par vous':'Initié par '+esc(m.by||'')}${m.rating?' · ★ '+String(m.rating).replace('.',',')+'/5':''}${mine?` · <span class="st st-${st[0]}">${esc(st[1])}</span>`:''}</p></div>
     ${pending?`<div class="pend-box"><b>⏳ En attente d'approbation par l'administrateur J-WIN</b><p class="muted">Votre mission sera visible par tous les utilisateurs dès qu'elle sera approuvée. L'administrateur reçoit une demande par e-mail et par WhatsApp${CONFIG.DEMO?' (en démonstration, utilisez les boutons ci-dessous pour le prévenir vous-même)':''}.</p><div style="display:flex;gap:.5rem;flex-wrap:wrap"><a class="btn btn-ghost btn-sm btn-link" href="${adm.wa}" target="_blank" rel="noopener"><svg class="lg lg-mark" aria-hidden="true"><use href="#l-whatsapp"/></svg>Prévenir par WhatsApp</a><a class="btn btn-ghost btn-sm btn-link" href="${adm.mail}" target="_blank" rel="noopener">Prévenir par e-mail</a></div></div>`:''}
     ${own&&m.mod==='rejetee'?`<div class="pend-box"><b>Mission refusée par l'administrateur</b><p class="muted">${esc(m.modNote||'Elle ne respecte pas les règles de la plateforme. Modifiez-la puis dupliquez-la pour la soumettre à nouveau.')}</p></div>`:''}
-    ${own&&m.mod==='approved'&&m.status==='attente'?'<p class="hint">✅ Approuvée : votre mission est visible par tous les utilisateurs.</p>':''}
+    ${own&&m.mod==='approved'&&m.status==='attente'&&!cands.length?'<p class="hint">✅ Approuvée : votre mission est visible par tous les utilisateurs.</p>':''}
+    ${flow}
     ${gal}
     ${m.desc?`<p class="md-desc">${esc(m.desc)}</p>`:''}
-    ${m.audio?`<div class="audio-card"><b>🎧 Message vocal du donneur de mission</b><audio controls preload="metadata" src="${esc(mu(m.audio))}"></audio></div>`:''}
+    ${m.audio?`<div class="audio-card"><b>🎧 Message vocal du créateur de mission</b><audio controls preload="metadata" src="${esc(mu(m.audio))}"></audio></div>`:''}
     ${m.req&&m.req.length?`<div><b>Ce qui est attendu</b><ul class="reqs">${m.req.map(r=>`<li>${ico('check')}<span>${esc(r)}</span></li>`).join('')}</ul></div>`:''}
     ${m.files&&m.files.length?`<div class="files">${m.files.map(f=>'<span>Pièce jointe : '+esc(f)+'</span>').join('')}</div>`:''}
     <div class="md-facts"><div><small>Référence</small><b>${esc(m.id)}</b></div><div><small>Publiée le</small><b>${fdate(m.createdAt)}</b></div><div><small>Délai</small><b>${m.dl?m.dl+' jour'+(m.dl>1?'s':''):'Non précisé'}</b></div><div><small>Prix</small><b>${m.open?'Ouvert aux propositions':'Montant fixe'}</b></div></div>
-    ${links?`<div class="loc-card"><div class="md-leaf" id="mdLeaf"></div><div class="lc-t"><b>📍 ${esc(m.city)}${m.place?' · '+esc(m.place):''}</b><small class="muted">${mpos(m).approx?'Position approximative (centre de la commune). Le donneur précisera le lieu exact.':'Position exacte indiquée par le donneur.'}</small></div><div class="mapbtns"><a class="pri" href="${links.g}" target="_blank" rel="noopener">Google Maps</a><a href="${links.dir}" target="_blank" rel="noopener">Itinéraire</a><a href="${links.waze}" target="_blank" rel="noopener">Waze</a><a href="${links.apple}" target="_blank" rel="noopener">Apple Plans</a><a href="${links.osm}" target="_blank" rel="noopener">OpenStreetMap</a></div></div>`:`<div class="remote-card"><span style="font-size:1.6rem">🌐</span><div><b>Mission à distance</b><p class="muted">Aucune localisation n'est demandée : vous pouvez la réaliser de n'importe où.</p></div></div>`}
-    <div class="steps3"><div><i>👍</i>1. Vous acceptez</div><div><i>🛠️</i>2. Vous réalisez</div><div><i>💰</i>3. Vous êtes payé (WIN)</div></div>
+    ${links?`<div class="loc-card"><div class="md-leaf" id="mdLeaf"></div><div class="lc-t"><b>📍 ${esc(m.city)}${m.place?' · '+esc(m.place):''}</b><small class="muted">${mpos(m).approx?'Position approximative (centre de la commune). Le créateur précisera le lieu exact.':'Position exacte indiquée par le créateur.'}</small></div><div class="mapbtns"><a class="pri" href="${links.g}" target="_blank" rel="noopener">Google Maps</a><a href="${links.dir}" target="_blank" rel="noopener">Itinéraire</a><a href="${links.waze}" target="_blank" rel="noopener">Waze</a><a href="${links.apple}" target="_blank" rel="noopener">Apple Plans</a><a href="${links.osm}" target="_blank" rel="noopener">OpenStreetMap</a></div></div>`:`<div class="remote-card"><span style="font-size:1.6rem">🌐</span><div><b>Mission à distance</b><p class="muted">Aucune localisation n'est demandée : vous pouvez la réaliser de n'importe où.</p></div></div>`}
+    <div class="steps3"><div><i>👍</i>1. Candidature</div><div><i>🛠️</i>2. Réalisation + preuves</div><div><i>💰</i>3. Approbation et paiement</div></div>
     <p class="hint">Commission J-WIN : ${FEES.mission} % (${F(fee)}), prélevée sur la transaction.</p>
     <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">${b.join('')}</div></div>`;
   if(keep&&dlg.open){$('#dlgBody').innerHTML=html}else dlgOpen(mine?'Ma mission':'Mission disponible',html,true);
-  UI.dlgMission=id;
+  UI.dlgMission=id;UI.dlgKind='mission';
   setTimeout(()=>drawMiniMap(m),60);
   if(UI.view==='missions')renderMissions();
 }
 
 /* ---------- actions sur les missions ---------- */
 async function doAccept(id){
-  if(needKyc())return;
-  const m0=findM(id);if(!m0)return;
+  const m=findM(id);if(!m)return;
   if(quotaLeft('do')<1){dlgClose();if(!isVer()){go('settings');return toast('Limite de '+UNVER()+' missions réalisées atteinte sans vérification d\'identité. Vérifiez votre identité ci-dessous pour continuer.')}return toast('Votre offre '+planOf().n+' ne permet plus de réaliser de mission sur cette période. Changez d\'offre pour continuer.')}
-  if(LIVE)return liveAct(id,'accept',null,'Mission acceptée. Retrouvez-la dans votre historique.',true);
-  const i=S.market.findIndex(m=>m.id===id);if(i<0)return;
-  const m=S.market.splice(i,1)[0];
-  S.mine.push(Object.assign({},m,{role:'real',status:'cours',acceptedAt:Date.now()}));
-  notify('check','Mission acceptée','Vous avez accepté « '+m.title+' ».'+(m.askLoc&&m.mode!=='remote'?' Partagez votre position à l\'arrivée.':''));
-  UI.sel=null;dlgClose();saveS();render();toast('Mission acceptée. Retrouvez-la dans votre historique.');
+  const msg=(($('#apMsg')||{}).value||'').trim();
+  if(LIVE)return liveAct(id,'apply',{message:msg},'Candidature envoyée. Le créateur va examiner votre profil.');
+  const i=S.market.findIndex(x=>x.id===id);if(i<0)return;
+  const x=S.market.splice(i,1)[0];
+  S.mine.push(Object.assign({},x,{role:'real',status:'candidature',counterpart:{name:x.by,rating:x.rating,reviews:Math.round((x.rating||4)*3),done:12,verified:true,phone:'0700000000'},appliedAt:Date.now()}));
+  notify('send','Candidature envoyée','Vous avez postulé à « '+x.title+' ». Le créateur va examiner votre profil (nom, prénoms, note J-WIN).',['sms','mail']);
+  saveS();render();openMission(id,true);toast('Candidature envoyée.');
+}
+function doChoose(id,u){
+  if(LIVE)return liveAct(id,'choose',{userId:u},'Réalisateur choisi. Vous pouvez discuter avec lui.');
+  const m=findM(id),c=(m.candidates||[]).find(x=>x.userId===u);if(!c)return;
+  m.status='cours';m.acceptedAt=Date.now();m.realisateur=c.name;m.counterpart=Object.assign({id:c.userId},c);m.candidates=[];
+  notify('check','Réalisateur choisi',c.name+' réalisera « '+m.title+' ». Discutez avec lui dans la mission.',['sms','mail']);commit();toast('Réalisateur choisi.');
+}
+function doDecline(id,u){
+  if(LIVE)return liveAct(id,'decline',{userId:u},'Candidature refusée.');
+  const m=findM(id);m.candidates=(m.candidates||[]).filter(x=>x.userId!==u);commit();toast('Candidature refusée.');
+}
+async function doWithdrawApp(id){
+  if(!(await ask('Retirer votre candidature ?','Le créateur ne verra plus votre profil pour cette mission.','Retirer')))return;
+  if(LIVE)return liveAct(id,'withdraw-application',null,'Candidature retirée.',true);
+  const i=S.mine.findIndex(x=>x.id===id),m=S.mine[i];S.mine.splice(i,1);delete m.role;delete m.counterpart;m.status='attente';S.market.push(m);dlgClose();saveS();render();toast('Candidature retirée.');
+}
+/* preuves du réalisateur */
+function openProof(id){
+  const m=findM(id);if(!m)return;
+  UI.proofFor=id;UI.create={editId:null,media:{images:[],audio:null,lat:null,lng:null},rec:null};
+  dlgOpen('Envoyer mes preuves',`<form class="au-form" id="fProof" novalidate>
+    <p class="muted">Montrez que « ${esc(m.title)} » est réalisée : texte, lien, photos ou message vocal. Le créateur les examine, puis approuve (et vous êtes payé) ou demande une correction.</p>
+    ${m.proofNote?`<div class="notice warn"><b>Correction demandée</b><p>${esc(m.proofNote)}</p></div>`:''}
+    <div class="field"><label for="pfText">Compte rendu</label><textarea class="input" id="pfText" rows="4" maxlength="2000" placeholder="Ce qui a été fait, où, quand…"></textarea></div>
+    <div class="field"><label for="pfLink">Lien (facultatif)</label><input class="input" id="pfLink" inputmode="url" placeholder="https://…"><p class="err" id="pfLinkE" role="alert"></p></div>
+    <div class="field"><label for="cImgs">Photos (4 maximum)</label><input class="input" id="cImgs" type="file" accept="image/*" multiple><div class="thumbs" id="cThumbs"></div></div>
+    <div class="field"><label>Message vocal (facultatif)</label><div class="rec-row"><button class="btn btn-ghost btn-sm" type="button" data-act="c-rec" id="cRecBtn">🎙️ Enregistrer un message vocal</button><label class="btn btn-ghost btn-sm" for="cAudioFile" style="cursor:pointer">Ou joindre un fichier audio</label><input id="cAudioFile" type="file" accept="audio/*" hidden></div><div id="cAudioBox"></div></div>
+    <p class="err" id="pfErr" role="alert"></p>
+    <button class="btn btn-primary" type="submit">Envoyer pour approbation</button></form>`,true);
+}
+async function submitProof(){
+  const id=UI.proofFor,m=findM(id);if(!m)return;
+  const text=$('#pfText').value.trim(),link=$('#pfLink').value.trim(),md=UI.create.media;
+  if(!fe('pfLink',!link||/^https?:\/\//i.test(link)?'':'Le lien doit commencer par http:// ou https://'))return;
+  if(!text&&!link&&!md.images.length&&!md.audio){$('#pfErr').textContent='Ajoutez au moins une preuve : texte, lien, photo ou message vocal.';return}
+  $('#pfErr').textContent='';
+  if(LIVE){
+    const fd=new FormData();fd.append('text',text);fd.append('link',link);
+    md.images.forEach((u,i)=>fd.append('images',dataUrlToBlob(u),'preuve'+(i+1)+'.jpg'));
+    if(md.audio){const b=dataUrlToBlob(md.audio);fd.append('audio',b,'vocal.'+(b.type.includes('mp4')?'m4a':(b.type.includes('ogg')?'ogg':'webm')))}
+    try{await http('/api/missions/'+encodeURIComponent(id)+'/submit-proof',{body:fd})}catch(e){return $('#pfErr').textContent=e.message}
+    await syncMissions();dlgClose();openMission(id);return toast('Preuves envoyées. Le créateur va les examiner.');
+  }
+  m.proof={text,link,images:md.images.slice(),audio:md.audio,at:Date.now()};m.proofNote='';m.status='terminee';m.finishedAt=Date.now();
+  notify('send','Preuves envoyées','Vos preuves pour « '+m.title+' » sont en attente d\'approbation du créateur.',['sms','mail']);
+  saveS();dlgClose();render();openMission(id);toast('Preuves envoyées. Le créateur va les examiner.');
+}
+/* validation par le créateur : examen des preuves, note, paiement */
+function openValidate(id){
+  const m=findM(id);if(!m)return;
+  UI.vd={id,n:0};
+  dlgOpen('Examiner les preuves',`${proofHtml(m.proof)||'<p class="muted">Aucune preuve enregistrée.</p>'}
+    <div class="notice"><b>Approuver et payer</b><p class="muted">Approuver débite ${F(m.amount)} de votre portefeuille (solde : ${F(S.wallet.balance)}) et paie le réalisateur.</p>
+    <div><small class="muted">Notez la prestation (facultatif)</small><div class="starpick" id="vdStars">${[1,2,3,4,5].map(n=>`<button type="button" data-act="vd-star" data-n="${n}" aria-label="${n} sur 5">★</button>`).join('')}</div></div>
+    <div class="field"><label for="vdRev">Commentaire (facultatif)</label><input class="input" id="vdRev" maxlength="300" placeholder="Ex. Travail soigné et rapide"></div></div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn btn-primary" type="button" data-act="m-approve-pay" data-id="${esc(m.id)}">Approuver et payer ${F(m.amount)}</button><button class="btn btn-ghost" type="button" data-act="m-revise" data-id="${esc(m.id)}">Demander une correction</button></div>`,true);
+  UI.dlgMission=id;
+}
+function openRevise(id){
+  dlgOpen('Demander une correction',`<form class="au-form" id="fRevise" novalidate><div class="field"><label for="rvNote">Qu'y a-t-il à corriger ?</label><textarea class="input" id="rvNote" rows="3" maxlength="300" placeholder="Ex. Ajoutez une photo de la signature."></textarea><p class="err" id="rvNoteE" role="alert"></p></div><button class="btn btn-primary" type="submit">Envoyer au réalisateur</button></form>`);UI.reviseFor=id;
+}
+async function doRevise(id,note){
+  if(LIVE){try{await http('/api/missions/'+encodeURIComponent(id)+'/revise',{body:{note}});await syncMissions();dlgClose();openMission(id);return toast('Correction demandée.')}catch(e){return fe('rvNote',e.message)}}
+  const m=findM(id);m.status='cours';m.proofNote=note;notify('bell','Correction demandée','Vous avez demandé une correction sur « '+m.title+' ».');saveS();dlgClose();render();openMission(id);toast('Correction demandée.');
 }
 async function liveAct(id,act,body,msg,close){
   try{
@@ -3671,8 +3865,11 @@ async function syncMissions(){
 }
 async function doCancel(id){
   const m=findM(id);if(!m)return;
-  if(!(await ask('Annuler cette mission ?','Cette action est définitive. « '+m.title+' » passera au statut Annulée.','Annuler la mission')))return;
-  if(LIVE)return liveAct(id,'cancel',null,'Mission annulée.');
+  if(m.role==='donneur'&&!['attente'].includes(m.status)){return toast('Une mission acceptée ne peut plus être annulée par son créateur : seul l\'administrateur J-WIN peut l\'annuler.')}
+  const withdraw=m.role==='real';
+  if(!(await ask(withdraw?'Se retirer de cette mission ?':'Annuler cette mission ?',withdraw?'La mission redeviendra disponible pour d\'autres réalisateurs et le créateur sera prévenu.':'Cette action est définitive. « '+m.title+' » passera au statut Annulée et les candidats seront prévenus.',withdraw?'Me retirer':'Annuler la mission')))return;
+  if(LIVE)return liveAct(id,'cancel',null,withdraw?'Vous vous êtes retiré de la mission.':'Mission annulée.',withdraw);
+  if(withdraw){const i=S.mine.findIndex(x=>x.id===id);S.mine.splice(i,1);delete m.role;delete m.counterpart;m.status='attente';S.market.push(m);dlgClose();saveS();render();return toast('Vous vous êtes retiré de la mission.')}
   m.status='annulee';notify('bell','Mission annulée','Vous avez annulé « '+m.title+' ».');commit();toast('Mission annulée.');
 }
 function doDone(id){
@@ -3716,28 +3913,34 @@ function creditReal(m){
   S.wallet.tx.push({id:'t'+Date.now(),type:'win',label:m.title,amount:net,fee,method:'orange',at:Date.now(),inv:inv.no});
   notify('star','Paiement reçu','Vous avez reçu '+F(net)+' pour « '+m.title+' » (commission J-WIN de '+F(fee)+' incluse).',['sms','mail']);
 }
-async function doValidate(id){
+async function doValidate(id,rating,review){
   const m=findM(id);if(!m)return;
-  if(LIVE)return liveAct(id,'validate',null,'Résultat validé. Paiement effectué.');
+  if(LIVE){
+    try{await http('/api/missions/'+encodeURIComponent(id)+'/validate',{body:{rating:rating||undefined,review:review||''}});await syncMissions();await syncWallet();syncNotifs();dlgClose();openMission(id);return toast('Preuves approuvées. Paiement effectué.')}
+    catch(e){if(/Solde/.test(e.message)){const ok=await ask('Solde insuffisant',e.message,'Recharger');if(ok){dlgClose();openPay('recharge',Math.max(0,m.amount-S.wallet.balance))}return}return toast(e.message)}
+  }
   if(S.wallet.balance<m.amount){
-    const ok=await ask('Solde insuffisant','Il vous manque '+F(m.amount-S.wallet.balance)+' pour payer cette mission. Rechargez votre portefeuille, puis validez à nouveau.','Recharger');
+    const ok=await ask('Solde insuffisant','Il vous manque '+F(m.amount-S.wallet.balance)+' pour payer cette mission. Rechargez votre portefeuille, puis approuvez à nouveau.','Recharger');
     if(ok){dlgClose();openPay('recharge',m.amount-S.wallet.balance)}return;
   }
-  S.wallet.balance-=m.amount;m.status='payee';m.doneAt=Date.now();
+  S.wallet.balance-=m.amount;m.status='payee';m.doneAt=Date.now();if(rating){m.execRating=rating;m.execReview=review||''}
   const inv=localInvoice({kind:'paiement',label:'Paiement de mission',lines:[{label:'Mission « '+m.title+' » ('+m.id+')',amount:m.amount}],fee:0,total:m.amount,method:'Portefeuille J-WIN'});
   S.wallet.tx.push({id:'t'+Date.now(),type:'pay',label:'Paiement : '+m.title,amount:-m.amount,at:Date.now(),inv:inv.no});
-  notify('check','Mission validée','Vous avez validé « '+m.title+' » et payé '+F(m.amount)+'.',['sms','mail']);
-  commit();toast('Résultat validé. Paiement effectué.');
+  notify('check','Preuves approuvées','Vous avez approuvé « '+m.title+' » et payé '+F(m.amount)+'.',['sms','mail']);
+  saveS();dlgClose();render();openMission(id);toast('Preuves approuvées. Paiement effectué.');
 }
 function doSim(id){
   const m=findM(id);if(!m)return;
-  if(m.role==='real'&&m.status==='terminee'){creditReal(m);commit();toast('Le donneur a validé. Vous êtes payé.');}
-  else if(m.role==='donneur'&&m.mod==='pending'){m.mod='approved';notify('check','Mission approuvée','« '+m.title+' » a été approuvée par l\'administrateur : elle est maintenant visible par tous.',['sms','mail']);commit();toast('Mission approuvée : elle apparaît maintenant dans l\'onglet Missions.')}
-  else if(m.role==='donneur'&&m.status==='attente'){m.status='cours';m.realisateur='Moussa K.';notify('check','Mission acceptée','Moussa K. a accepté « '+m.title+' ».');commit();toast('Un réalisateur a accepté votre mission.')}
-  else if(m.role==='donneur'&&m.status==='cours'){m.status='terminee';notify('send','Résultat à valider','Le réalisateur a terminé « '+m.title+' ». Validez le résultat pour payer.',['sms','mail']);commit();toast('La mission est terminée. À vous de valider.')}
+  if(m.role==='real'&&m.status==='candidature'){m.status='cours';m.acceptedAt=Date.now();notify('check','Candidature retenue','Le créateur vous a choisi pour « '+m.title+' ».',['sms','mail']);commit();return toast('Le créateur vous a choisi.')}
+  if(m.role==='real'&&m.status==='terminee'){creditReal(m);commit();return toast('Le créateur a approuvé vos preuves. Vous êtes payé.')}
+  if(m.role==='donneur'&&m.mod==='pending'){m.mod='approved';notify('check','Mission approuvée','« '+m.title+' » a été approuvée par l\'administrateur : elle est maintenant visible par tous.',['sms','mail']);commit();return toast('Mission approuvée : elle apparaît maintenant dans l\'onglet Missions.')}
+  if(m.role==='donneur'&&m.status==='attente'){m.candidates=DEMO_PEOPLE.map(p=>Object.assign({id:p.userId},p));notify('user','Nouvelles candidatures','3 réalisateurs ont postulé à « '+m.title+' ». Consultez leur profil et leur note.',['sms','mail']);commit();return toast('3 réalisateurs ont postulé.')}
+  if(m.role==='donneur'&&m.status==='cours'){m.proof={text:'Mission réalisée : colis remis en main propre, signature du destinataire obtenue.',link:'https://exemple.ci/preuve',images:[],audio:null,at:Date.now()};m.status='terminee';notify('send','Preuves à valider','Le réalisateur a envoyé ses preuves pour « '+m.title+' ». Approuvez pour payer.',['sms','mail']);commit();toast('Le réalisateur a envoyé ses preuves.')}
 }
 function doRate(id,n){
-  if(LIVE)return liveAct(id,'rate',{n:n});const m=findM(id);if(!m)return;m.myRating=n;commit();toast('Merci, votre note de '+n+'/5 est enregistrée.')}
+  if(LIVE)return liveAct(id,'rate',{n:n},'Merci, votre note de '+n+'/5 est enregistrée.');const m=findM(id);if(!m)return;m.myRating=n;commit();toast('Merci, votre note de '+n+'/5 est enregistrée.')}
+function doRateExec(id,n){
+  if(LIVE)return liveAct(id,'rate-exec',{n:n},'Merci, votre note de '+n+'/5 est enregistrée.');const m=findM(id);if(!m)return;m.execRating=n;commit();toast('Merci, votre note de '+n+'/5 est enregistrée.')}
 function doClaim(id){const m=findM(id);if(!m)return;notify('chat','Réclamation enregistrée','Le service client examine « '+m.title+' » et vous répondra ici.');commit();toast('Réclamation envoyée au service client.')}
 
 /* ---------- création / modification de mission ---------- */
@@ -3988,7 +4191,7 @@ const BOT=[
   [/otp|code|sms|whatsapp/,'Le code à 6 chiffres est valable 5 minutes. Si vous ne le recevez pas, patientez 45 secondes puis demandez un renvoi par SMS ou par WhatsApp.'],
   [/niveau|tranche|win ?[123]|quel win/,'WIN 1 : de 100 à 10 000 F. WIN 2 : de 10 000 à 50 000 F. WIN 3 : plus de 50 000 F. J-WIN classe chaque mission avant sa publication.'],
   [/offre|abonn|entreprise|standard|forfait/,'L\'offre Standard est gratuite (100 missions créées et 50 réalisées par trimestre). Les offres Entreprise coûtent 10 000, 20 000 (Entreprise Standard) ou 60 000 F (Entreprise Premium, illimitée) par mois. Modifiez la vôtre depuis Portefeuille.'],
-  [/paie|pay[ée]|reçu|reclam|réclam|non obtenu|argent/,'Vous êtes payé automatiquement après la validation du donneur de mission. Si vous n\'avez pas reçu votre WIN, ouvrez la mission et choisissez « Signaler un problème » : le service client examine la mission.'],
+  [/paie|pay[ée]|reçu|reclam|réclam|non obtenu|argent/,'Vous êtes payé après l\'approbation de vos preuves par le créateur de la mission. Si vous n\'avez pas reçu votre WIN, ouvrez la mission et choisissez « Signaler un problème » : le service client examine la mission.'],
   [/ident|vérif|cni|passeport|selfie/,'Ajoutez votre pièce d\'identité (CNI ou passeport) et un selfie depuis Paramètres, Vérification d\'identité. Sans elle, vous pouvez créer et réaliser 3 missions et vous ne pouvez pas retirer de fonds ; une fois validée, ces limites sont levées.'],
   [/mission|créer|creer|accepter|publier/,'Pour trouver une mission, ouvrez Missions. Pour en publier une, choisissez Créer une mission : décrivez-la, proposez un montant, J-WIN la valide et la classe.']
 ];
@@ -4022,7 +4225,7 @@ const ACT={
   'c-rec'(){toggleRec()},
   'c-img-del'(el){UI.create.media.images.splice(Number(el.dataset.i),1);renderThumbs()},
   'c-audio-del'(){UI.create.media.audio=null;renderAudioBox()},
-  'img-open'(el){const m=findM(UI.dlgMission);if(!m)return;$('#lbImg').src=mu(m.images[Number(el.dataset.i)]);const lb=$('#lightbox');if(!lb.open)lb.showModal()},
+  'img-open'(el){const m=findM(UI.dlgMission);if(!m)return;const L_=el.dataset.k==='proof'?((m.proof&&m.proof.images)||[]):m.images;$('#lbImg').src=mu(L_[Number(el.dataset.i)]);const lb=$('#lightbox');if(!lb.open)lb.showModal()},
   'img-close'(){const lb=$('#lightbox');if(lb.open)lb.close()},
   'req-sim'(el){resolveReq(el.dataset.id)},
   'dep-sent'(){depSent()},
@@ -4087,9 +4290,20 @@ const ACT={
   'm-view'(el){openMission(el.dataset.id)},
   'm-accept'(el){openMission(el.dataset.id)},
   'm-accept-ok'(el){doAccept(el.dataset.id)},
-  'm-done'(el){doDone(el.dataset.id)},
+  'm-done'(el){openProof(el.dataset.id)},
+  'm-proof'(el){openProof(el.dataset.id)},
+  'm-choose'(el){doChoose(el.dataset.id,el.dataset.u)},
+  'm-decline'(el){doDecline(el.dataset.id,el.dataset.u)},
+  'm-withdraw-app'(el){doWithdrawApp(el.dataset.id)},
+  'm-chat'(el){openChat(el.dataset.id,el.dataset.u||'me')},
+  'm-rate-exec'(el){doRateExec(el.dataset.id,Number(el.dataset.n))},
+  'm-approve-pay'(el){doValidate(el.dataset.id,(UI.vd&&UI.vd.n)||0,($('#vdRev')||{}).value||'')},
+  'm-revise'(el){openRevise(el.dataset.id)},
+  'vd-star'(el){const n=Number(el.dataset.n);UI.vd.n=UI.vd.n===n?0:n;$$('#vdStars button').forEach(b=>b.classList.toggle('on',Number(b.dataset.n)<=UI.vd.n))},
+  msgs(){openMsgs()},
+  'thread-open'(el){const m=findM(el.dataset.m);openChat(el.dataset.m,m&&m.role==='donneur'?el.dataset.c:'me')},
   'm-cancel'(el){doCancel(el.dataset.id)},
-  'm-validate'(el){doValidate(el.dataset.id)},
+  'm-validate'(el){openValidate(el.dataset.id)},
   'm-sim'(el){doSim(el.dataset.id)},
   'm-rate'(el){doRate(el.dataset.id,Number(el.dataset.n))},
   'm-claim'(el){doClaim(el.dataset.id)},
@@ -4098,7 +4312,8 @@ const ACT={
   pin(el){UI.sel=el.dataset.id;renderMissions();const r=$('.mrow.sel');if(r)r.scrollIntoView({block:'nearest',behavior:'smooth'});openMission(el.dataset.id)},
   'h-status'(el){UI.hStatus=el.dataset.s;renderHistory()},
   'reset-filters'(){['mQ','mWin','mCity','mAmt','mDate'].forEach(id=>{$('#'+id).value=''});renderMissions()},
-  'notif-read'(){S.notifs.forEach(n=>n.read=true);saveS();render()},
+  'notif-read'(){if(LIVE){http('/api/notifications/read',{body:{all:true}}).then(syncNotifs).catch(()=>{});return}S.notifs.forEach(n=>n.read=true);saveS();render()},
+  'notif-open'(el){const id=el.dataset.mid;if(findM(id))openMission(id);else syncMissions().then(()=>{if(findM(id))openMission(id)})},
   'reset-demo'(){store.del('jwin-app-v1:demo');S=demoState();saveS();go('dashboard');toast('Données de démonstration réinitialisées.')}
 };
 document.addEventListener('click',e=>{
@@ -4252,6 +4467,9 @@ document.addEventListener('submit',async e=>{
     $('#cpOld').value='';$('#cpNew').value='';toast('Mot de passe actualisé.');
   }
   else if(id==='fKyc')kycSubmit();
+  else if(id==='fProof')submitProof();
+  else if(id==='fRevise'){const n=$('#rvNote').value.trim();if(!fe('rvNote',n.length>=3?'':'Indiquez ce qui doit être corrigé.'))return;doRevise(UI.reviseFor,n)}
+  else if(id==='chForm'){const i=$('#chIn'),t=i.value.trim();if(t){i.value='';chatSend(t)}}
   else if(id==='fCreate')submitCreate();
   else if(id==='fPay')submitPay();
   else if(id==='fPlan')submitPlan();

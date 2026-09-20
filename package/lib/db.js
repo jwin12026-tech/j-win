@@ -33,6 +33,11 @@ export function openDb(file) {
       accepted_at INTEGER, finished_at INTEGER, done_at INTEGER, rating INTEGER, created_at INTEGER);
     CREATE TABLE IF NOT EXISTS media(id TEXT PRIMARY KEY, mime TEXT, file TEXT, owner_id TEXT, created_at INTEGER);
     CREATE TABLE IF NOT EXISTS kyc_docs(user_id TEXT PRIMARY KEY, type TEXT, front TEXT, back TEXT, selfie TEXT, ocr TEXT, submitted_at INTEGER);
+    CREATE TABLE IF NOT EXISTS applications(id TEXT PRIMARY KEY, mission_id TEXT, user_id TEXT, status TEXT DEFAULT 'pending', note TEXT, created_at INTEGER, decided_at INTEGER, UNIQUE(mission_id,user_id));
+    CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT, mission_id TEXT, candidate_id TEXT, sender_id TEXT, text TEXT, created_at INTEGER, read_at INTEGER);
+    CREATE INDEX IF NOT EXISTS ix_msg ON messages(mission_id, candidate_id, id);
+    CREATE TABLE IF NOT EXISTS notifs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, type TEXT, title TEXT, text TEXT, mission_id TEXT, read INTEGER DEFAULT 0, created_at INTEGER);
+    CREATE INDEX IF NOT EXISTS ix_notif_user ON notifs(user_id, id);
     CREATE TABLE IF NOT EXISTS magic_links(jti TEXT PRIMARY KEY, email TEXT, used_at INTEGER);
     CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER, actor TEXT, action TEXT, target TEXT, detail TEXT);
@@ -42,7 +47,7 @@ export function openDb(file) {
   `);
   try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'"); } catch { /* colonne déjà présente */ }
   // Bases créées par une version plus ancienne : on ajoute les colonnes manquantes.
-  for (const sql of ['ALTER TABLE payments ADD COLUMN ref TEXT', 'ALTER TABLE payments ADD COLUMN tx_id TEXT']) { try { db.exec(sql); } catch { /* déjà présente */ } }
+  for (const sql of ['ALTER TABLE payments ADD COLUMN ref TEXT', 'ALTER TABLE payments ADD COLUMN tx_id TEXT', 'ALTER TABLE missions ADD COLUMN proof TEXT', 'ALTER TABLE missions ADD COLUMN proof_at INTEGER', 'ALTER TABLE missions ADD COLUMN proof_note TEXT', 'ALTER TABLE missions ADD COLUMN exec_rating INTEGER', 'ALTER TABLE missions ADD COLUMN exec_review TEXT', 'ALTER TABLE missions ADD COLUMN review TEXT', 'ALTER TABLE users ADD COLUMN admin_note TEXT']) { try { db.exec(sql); } catch { /* déjà présente */ } }
   return db;
 }
 

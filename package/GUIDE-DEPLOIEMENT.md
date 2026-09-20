@@ -70,3 +70,15 @@ Vérifiez avec **Système et journal > Envoyer l'e-mail**.
 - Les offres Entreprise ne sont pas encore facturées côté serveur : tous les comptes ont les limites de l'offre Standard (100 créées / 50 réalisées par trimestre).
 - Apple / Microsoft / Yahoo : non branchés (Google uniquement). Le paiement automatique CinetPay reste disponible (`PAYMENT_MODE=cinetpay`).
 - Contrôle d'identité : `KYC_MODE=auto` fait confiance aux informations saisies. Passez en `manual` pour valider vous-même chaque personne.
+
+## 9. Fonctionnement des missions (version actuelle)
+
+1. **Création** : le créateur publie, l'administrateur approuve (lien reçu par e-mail ou depuis la console).
+2. **Candidature** : les réalisateurs *postulent*. Le créateur voit leur nom, leurs prénoms, leur note J-WIN sur 5 (moyenne des avis reçus), leur nombre de missions et un éventuel message, puis **choisit** un réalisateur (les autres sont prévenus).
+3. **Discussion** : dès la première candidature, créateur et candidat échangent par messages dans l'application (icône 💬). Le numéro de téléphone (boutons *Appeler* et *WhatsApp*) n'est partagé qu'une fois le réalisateur choisi. L'administrateur peut relire la discussion d'une mission dans la console (fiche mission) en cas de litige.
+4. **Annulation** : le créateur peut annuler tant qu'aucun réalisateur n'est choisi. Ensuite, **seul l'administrateur** peut annuler (console, fiche mission, bouton *Annuler la mission*). Le réalisateur peut se retirer : la mission redevient ouverte.
+5. **Preuves** : le réalisateur envoie texte, lien, photos (4 max) et/ou message vocal. Le créateur **approuve** (son portefeuille est débité, le réalisateur est crédité, commission incluse) ou **demande une correction**. À l'approbation, il note la prestation (1 à 5) ; le réalisateur note ensuite le créateur.
+6. **Notifications** : chaque étape crée une notification dans l'application (cloche, rafraîchie toutes les 15 s), en plus de l'e-mail et du SMS.
+7. **Modération** (console > *Avis et modération*) : liste des avis, suppression d'un avis abusif (la note est recalculée), fiche utilisateur avec ses notes et ses avis, bouton **Bannir le compte**, message direct à un utilisateur, note interne.
+
+Nouvelles tables : `applications`, `messages`, `notifs`. Les migrations se font toutes seules au démarrage (rien à faire sur Render).

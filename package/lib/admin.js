@@ -81,12 +81,15 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
       missions: { pending: one("SELECT COUNT(*) c FROM missions WHERE mod='pending' AND status!='annulee'").c, open: one("SELECT COUNT(*) c FROM missions WHERE mod='approved' AND status='attente'").c, inProgress: one("SELECT COUNT(*) c FROM missions WHERE status IN ('cours','terminee')").c, paid: one("SELECT COUNT(*) c FROM missions WHERE status='payee'").c, rejected: one("SELECT COUNT(*) c FROM missions WHERE mod='rejetee'").c, volume: one("SELECT COALESCE(SUM(amount),0) s FROM missions WHERE status='payee'").s },
       queue: { missions: one("SELECT COUNT(*) c FROM missions WHERE mod='pending' AND status!='annulee'").c, deposits: one("SELECT COUNT(*) c FROM payments WHERE kind='recharge' AND status='PENDING_ADMIN'").c, withdrawals: one("SELECT COUNT(*) c FROM payments WHERE kind='withdraw' AND status='PENDING_ADMIN'").c, kyc: one("SELECT COUNT(*) c FROM users WHERE kyc_status='pending'").c },
       money: { walletTotal: one('SELECT COALESCE(SUM(amount),0) s FROM ledger').s, deposited: one("SELECT COALESCE(SUM(amount),0) s FROM payments WHERE kind='recharge' AND status='SUCCESS'").s, withdrawn: one("SELECT COALESCE(SUM(amount),0) s FROM payments WHERE kind='withdraw' AND status='SUCCESS'").s, withdrawPending: one("SELECT COALESCE(SUM(amount),0) s FROM payments WHERE kind='withdraw' AND status='PENDING_ADMIN'").s, fees },
+      recent: [...all('SELECT created_at t, prenoms||\' \'||nom x FROM users ORDER BY created_at DESC LIMIT 6').map((r) => ({ t: r.t, k: 'user', x: 'Inscription : ' + r.x })), ...all('SELECT created_at t, title x, amount a FROM missions ORDER BY created_at DESC LIMIT 6').map((r) => ({ t: r.t, k: 'mission', x: 'Mission créée : ' + r.x + ' (' + r.a + ' F)' })), ...all("SELECT created_at t, kind, amount a FROM payments WHERE status!='AWAITING' ORDER BY created_at DESC LIMIT 6").map((r) => ({ t: r.t, k: 'pay', x: (r.kind === 'recharge' ? 'Dépôt' : 'Retrait') + ' de ' + r.a + ' F' }))].sort((p, q) => q.t - p.t).slice(0, 12),
+      reviews: { n: one('SELECT COUNT(*) c FROM missions WHERE exec_rating IS NOT NULL').c + one('SELECT COUNT(*) c FROM missions WHERE rating IS NOT NULL').c, low: one('SELECT COUNT(*) c FROM missions WHERE exec_rating<=2').c + one('SELECT COUNT(*) c FROM missions WHERE rating<=2').c, avg: (() => { const r = one('SELECT AVG(exec_rating) a FROM missions'); return r.a ? Math.round(r.a * 10) / 10 : null; })() },
       signups: bucket(all('SELECT created_at t FROM users WHERE created_at>=?', d30), () => 1),
       volume: bucket(all("SELECT created_at t, -amount a FROM ledger WHERE kind='mission_pay' AND created_at>=?", d30), (x) => x.a),
     };
   });
 
   /* ----- utilisateurs ----- */
+  const rate = (id, col, who_) => { const r = one(`SELECT AVG(${col}) a, COUNT(${col}) n FROM missions WHERE ${who_}=? AND ${col} IS NOT NULL`, id); return { avg: r.a ? Math.round(r.a * 10) / 10 : null, n: r.n }; };
   const pubUser = (u) => { const { pw_hash, ...x } = u; return { ...x, balance: balanceOf(db, u.id) }; };
   get('/users', (req) => {
     const q = req.query, w = ['1=1'], a = [];
@@ -94,13 +97,14 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
     if (q.status === 'suspended') w.push("status='suspended'"); if (['none', 'pending', 'verified', 'rejected'].includes(q.kyc)) { w.push('kyc_status=?'); a.push(q.kyc); }
     const limit = Math.min(Number(q.limit) || 50, 200), off = (Math.max(Number(q.page) || 1, 1) - 1) * limit;
     const total = one(`SELECT COUNT(*) c FROM users WHERE ${w.join(' AND ')}`, ...a).c;
-    const rows = all(`SELECT * FROM users WHERE ${w.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`, ...a, limit, off).map((u) => ({ ...pubUser(u), created: one('SELECT COUNT(*) c FROM missions WHERE creator_id=?', u.id).c, done: one("SELECT COUNT(*) c FROM missions WHERE executor_id=? AND status='payee'", u.id).c }));
+    const rows = all(`SELECT * FROM users WHERE ${w.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`, ...a, limit, off).map((u) => ({ ...pubUser(u), rExec: rate(u.id, 'exec_rating', 'executor_id'), rCreator: rate(u.id, 'rating', 'creator_id'), created: one('SELECT COUNT(*) c FROM missions WHERE creator_id=?', u.id).c, done: one("SELECT COUNT(*) c FROM missions WHERE executor_id=? AND status='payee'", u.id).c }));
     return { total, rows };
   });
   get('/users/:id', (req) => {
     const u = userById(req.params.id); if (!u) throw bad('Utilisateur introuvable.', 404);
     const kd = one('SELECT type,ocr,submitted_at,front IS NOT NULL f,back IS NOT NULL b,selfie IS NOT NULL s FROM kyc_docs WHERE user_id=?', u.id);
-    return { user: pubUser(u), kyc: kd ? { ...kd, ocr: JSON.parse(kd.ocr || '{}') } : null, ledger: all('SELECT * FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 100', u.id), missions: all('SELECT id,title,amount,status,mod,creator_id,executor_id,created_at FROM missions WHERE creator_id=? OR executor_id=? ORDER BY created_at DESC LIMIT 50', u.id, u.id), payments: all('SELECT id,kind,method,amount,fee,status,ref,created_at FROM payments WHERE user_id=? ORDER BY created_at DESC LIMIT 50', u.id) };
+    const reviews = all("SELECT m.id,m.title,m.exec_rating er,m.exec_review ev,m.rating cr,m.review cv,m.executor_id,m.creator_id,(c.prenoms||' '||c.nom) creator,(e.prenoms||' '||e.nom) executor FROM missions m LEFT JOIN users c ON c.id=m.creator_id LEFT JOIN users e ON e.id=m.executor_id WHERE (m.executor_id=? AND m.exec_rating IS NOT NULL) OR (m.creator_id=? AND m.rating IS NOT NULL) ORDER BY m.done_at DESC LIMIT 50", u.id, u.id);
+    return { rExec: rate(u.id, 'exec_rating', 'executor_id'), rCreator: rate(u.id, 'rating', 'creator_id'), reviews, user: pubUser(u), kyc: kd ? { ...kd, ocr: JSON.parse(kd.ocr || '{}') } : null, ledger: all('SELECT * FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 100', u.id), missions: all('SELECT id,title,amount,status,mod,creator_id,executor_id,created_at FROM missions WHERE creator_id=? OR executor_id=? ORDER BY created_at DESC LIMIT 50', u.id, u.id), payments: all('SELECT id,kind,method,amount,fee,status,ref,created_at FROM payments WHERE user_id=? ORDER BY created_at DESC LIMIT 50', u.id) };
   });
   const target = (req) => { const u = userById(req.params.id); if (!u) throw bad('Utilisateur introuvable.', 404); return u; };
   post('/users/:id/status', (req) => { const u = target(req), s = req.body?.status === 'suspended' ? 'suspended' : 'active'; db.prepare('UPDATE users SET status=? WHERE id=?').run(s, u.id); audit('user_status', u.id, { status: s, reason: req.body?.reason || '' }); if (s === 'suspended') notifier.toUser(u, 'Compte suspendu', 'Votre compte J-WIN a été suspendu. Contactez le support pour en savoir plus.').catch(() => {}); return { status: s }; });
@@ -128,13 +132,38 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
     audit('kyc_view', req.params.id, req.params.which); res.set('Cache-Control', 'no-store'); res.sendFile(path.join(kycDir, f));
   }));
 
+  post('/users/:id/note', (req) => { const u = target(req); db.prepare('UPDATE users SET admin_note=? WHERE id=?').run(String(req.body?.note || '').slice(0, 1000), u.id); audit('user_note', u.id); return {}; });
+  post('/users/:id/message', (req) => {
+    const u = target(req), subject = String(req.body?.subject || '').trim().slice(0, 120), text = String(req.body?.text || '').trim().slice(0, 1500);
+    if (subject.length < 3 || text.length < 5) throw bad('Objet et message requis.');
+    getV4().tell(u, subject, text, null, 'bell'); audit('user_message', u.id, subject); return {};
+  });
+  get('/reviews', (req) => {
+    const max = Number(req.query.max) || 5, rows = all("SELECT m.id,m.title,m.done_at,m.exec_rating,m.exec_review,m.rating,m.review,m.creator_id,m.executor_id,(c.prenoms||' '||c.nom) creator,(e.prenoms||' '||e.nom) executor FROM missions m LEFT JOIN users c ON c.id=m.creator_id LEFT JOIN users e ON e.id=m.executor_id WHERE m.exec_rating IS NOT NULL OR m.rating IS NOT NULL ORDER BY m.done_at DESC LIMIT 400");
+    const list = []; for (const m of rows) { if (m.exec_rating && m.exec_rating <= max) list.push({ mission: m.id, title: m.title, which: 'exec', from: m.creator, fromId: m.creator_id, to: m.executor, toId: m.executor_id, rating: m.exec_rating, review: m.exec_review, at: m.done_at }); if (m.rating && m.rating <= max) list.push({ mission: m.id, title: m.title, which: 'creator', from: m.executor, fromId: m.executor_id, to: m.creator, toId: m.creator_id, rating: m.rating, review: m.review, at: m.done_at }); }
+    return { rows: list };
+  });
+  post('/reviews/:mid/remove', (req) => {
+    const which = req.body?.which === 'creator' ? 'creator' : 'exec';
+    db.prepare(which === 'exec' ? 'UPDATE missions SET exec_rating=NULL, exec_review=NULL WHERE id=?' : 'UPDATE missions SET rating=NULL, review=NULL WHERE id=?').run(req.params.mid); audit('review_remove', req.params.mid, which); return {};
+  });
+  get('/missions/:id/detail', (req) => {
+    const m = one('SELECT * FROM missions WHERE id=?', req.params.id); if (!m) throw bad('Mission introuvable.', 404);
+    const nm = (id) => { const u = id && userById(id); return u ? { id: u.id, name: `${u.prenoms} ${u.nom}`, phone: u.phone || '', email: u.email || '' } : null; }, media = (i) => '/media/' + i;
+    const p = m.proof ? JSON.parse(m.proof) : null;
+    return { mission: { id: m.id, title: m.title, descr: m.descr, cat: m.cat, mode: m.mode, city: m.city, place: m.place, amount: m.amount, win: m.win, mod: m.mod, status: m.status, created_at: m.created_at, accepted_at: m.accepted_at, done_at: m.done_at, exec_rating: m.exec_rating, exec_review: m.exec_review, rating: m.rating, review: m.review, images: JSON.parse(m.images || '[]').map(media), audio: m.audio ? media(m.audio) : null },
+      creator: nm(m.creator_id), executor: nm(m.executor_id), proof: p ? { text: p.text, link: p.link, images: (p.images || []).map(media), audio: p.audio ? media(p.audio) : null, at: m.proof_at } : null, proofNote: m.proof_note,
+      candidates: all('SELECT a.user_id,a.status,a.note,a.created_at FROM applications a WHERE a.mission_id=? ORDER BY a.created_at', m.id).map((a) => ({ ...nm(a.user_id), status: a.status, note: a.note, at: a.created_at })),
+      chat: all('SELECT x.id,x.candidate_id,x.sender_id,x.text,x.created_at FROM messages x WHERE x.mission_id=? ORDER BY x.id LIMIT 300', m.id).map((x) => ({ ...x, sender: nm(x.sender_id)?.name })) };
+  });
+
   /* ----- missions ----- */
   get('/missions', (req) => {
     const q = req.query, w = ['1=1'], a = [];
     if (['pending', 'approved', 'rejetee'].includes(q.mod)) { w.push('m.mod=?'); a.push(q.mod); }
     if (['attente', 'cours', 'terminee', 'payee', 'annulee'].includes(q.status)) { w.push('m.status=?'); a.push(q.status); }
     if (q.q) { w.push('(m.title LIKE ? OR m.id LIKE ? OR m.city LIKE ?)'); a.push(...Array(3).fill(like(q.q))); }
-    return { rows: all(`SELECT m.id,m.title,m.descr,m.cat,m.mode,m.city,m.place,m.amount,m.win,m.mod,m.mod_note,m.status,m.created_at,m.images,m.audio,(u.prenoms||' '||u.nom) creator,u.phone creator_phone,(e.prenoms||' '||e.nom) executor FROM missions m LEFT JOIN users u ON u.id=m.creator_id LEFT JOIN users e ON e.id=m.executor_id WHERE ${w.join(' AND ')} ORDER BY m.created_at DESC LIMIT 300`, ...a).map((m) => ({ ...m, images: JSON.parse(m.images || '[]').map((i) => '/media/' + i), audio: m.audio ? '/media/' + m.audio : null })) };
+    return { rows: all(`SELECT m.id,m.title,m.descr,m.cat,m.mode,m.city,m.place,m.amount,m.win,m.mod,m.mod_note,m.status,m.created_at,m.images,m.audio,(u.prenoms||' '||u.nom) creator,u.phone creator_phone,(e.prenoms||' '||e.nom) executor,(SELECT COUNT(*) FROM applications ap WHERE ap.mission_id=m.id AND ap.status='pending') applicants,(m.proof IS NOT NULL) has_proof FROM missions m LEFT JOIN users u ON u.id=m.creator_id LEFT JOIN users e ON e.id=m.executor_id WHERE ${w.join(' AND ')} ORDER BY m.created_at DESC LIMIT 300`, ...a).map((m) => ({ ...m, images: JSON.parse(m.images || '[]').map((i) => '/media/' + i), audio: m.audio ? '/media/' + m.audio : null })) };
   });
   const decideOn = (type, id, ok, note) => {
     const v4 = getV4(), p = { t: type, id }, d = v4.describe(p);
@@ -147,7 +176,7 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
     const m = db.prepare('SELECT * FROM missions WHERE id=?').get(req.params.id); if (!m) throw bad('Mission introuvable.', 404);
     if (['payee', 'annulee'].includes(m.status)) throw bad('Mission déjà clôturée.', 409);
     db.prepare("UPDATE missions SET status='annulee', mod_note=? WHERE id=?").run(String(req.body?.note || 'Annulée par l\'administrateur').slice(0, 200), m.id); audit('mission_cancel', m.id);
-    for (const uid_ of [m.creator_id, m.executor_id].filter(Boolean)) notifier.toUser(userById(uid_), `Mission annulée ${m.id}`, `La mission « ${m.title} » a été annulée par l'administrateur.`).catch(() => {});
+    for (const uid_ of [m.creator_id, m.executor_id].filter(Boolean)) getV4().tell(userById(uid_), `Mission annulée · ${m.id}`, `La mission « ${m.title} » a été annulée par l'administrateur.${req.body?.note ? ' Motif : ' + String(req.body.note).slice(0, 200) : ''}`, m.id, 'bell');
     return {};
   });
 

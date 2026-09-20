@@ -84,6 +84,8 @@ test('retrait : solde réservé, e-mail à l\'administrateur, paiement puis refu
 });
 
 let mid;
+const enc = encodeURIComponent;
+const proof = (t, id, extra = {}) => { const fd = new FormData(); fd.append('text', 'Travail terminé, voir photo'); Object.entries(extra).forEach(([k, x]) => fd.append(k, x)); fd.append('images', new Blob([Buffer.from('proofjpg')], { type: 'image/jpeg' }), 'p.jpg'); return call('POST', `/api/missions/${enc(id)}/submit-proof`, null, t, fd); };
 test('mission : invisible tant que non approuvée, photos + vocal, approbation par lien, acceptation, paiement', async () => {
   const fd = new FormData();
   Object.entries({ title: 'Livrer un dossier', desc: 'Récupérer un dossier au Plateau et le livrer à Cocody.', cat: 'livraison', mode: 'onsite', city: 'Cocody', place: 'Riviera 2', amount: '7500', lat: '5.36', lng: '-3.98', askLoc: 'false' }).forEach(([k, v]) => fd.append(k, v));
@@ -95,18 +97,20 @@ test('mission : invisible tant que non approuvée, photos + vocal, approbation p
   assert.ok(mail.text.includes('Livrer un dossier') && mail.text.includes('Photos : 2'));
   assert.equal((await call('GET', '/api/missions', null, B.j.token)).j.market.length, 0);           // pas visible par tous avant approbation
   const mine = (await call('GET', '/api/missions', null, A.j.token)).j.mine; assert.equal(mine[0].role, 'donneur');
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/accept`, {}, B.j.token)).s, 409);            // non approuvée : inacceptable
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/apply`, {}, B.j.token)).s, 409);            // non approuvée : pas de candidature possible
   assert.equal((await adminDo(actionLink(mail, 'Approuver'))).s, 200);
   assert.ok(mailTo('aya@example.com', 'Mission approuvée'));
   const market = (await call('GET', '/api/missions', null, B.j.token)).j.market; assert.equal(market.length, 1); assert.equal(market[0].by, 'Aya T.');
   const img = await fetch(base + market[0].images[0]); assert.equal(img.status, 200); assert.equal(img.headers.get('content-type'), 'image/jpeg');
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/accept`, {}, A.j.token)).s, 400);           // pas sa propre mission
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/accept`, {}, B.j.token)).s, 200);
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/accept`, {}, B.j.token)).s, 409);
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/validate`, {}, A.j.token)).s, 409);          // pas encore terminée
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/done`, {}, B.j.token)).s, 200);
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/apply`, {}, A.j.token)).s, 400);           // pas sa propre mission
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/apply`, {}, B.j.token)).s, 200);
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/apply`, {}, B.j.token)).s, 409);
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/choose`, { userId: B.j.user.id }, B.j.token)).s, 403);   // seul le créateur choisit
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/choose`, { userId: B.j.user.id }, A.j.token)).s, 200);
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/validate`, {}, A.j.token)).s, 409);          // pas encore de preuves
+  assert.equal((await proof(B.j.token, mid)).s, 200);
   assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/validate`, {}, B.j.token)).s, 409);          // seul le donneur valide
-  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/validate`, {}, A.j.token)).s, 200);
+  assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/validate`, { rating: 5, review: 'Parfait' }, A.j.token)).s, 200);
   assert.equal((await call('GET', '/api/wallet', null, A.j.token)).j.balance, 40000 - 7500);
   assert.equal((await call('GET', '/api/wallet', null, B.j.token)).j.balance, 7500 - 75);            // commission 1 %
   assert.equal((await call('POST', `/api/missions/${encodeURIComponent(mid)}/rate`, { n: 5 }, B.j.token)).s, 200);
@@ -125,7 +129,7 @@ test('mission refusée par l\'administrateur, quota de création, solde insuffis
   const fd = new FormData(); Object.entries({ title: 'Mission chère', desc: 'Une description suffisante.', cat: 'visite', mode: 'remote', amount: '9000' }).forEach(([k, v]) => fd.append(k, v));
   const c = await call('POST', '/api/missions', null, poor.j.token, fd);
   const okMail = [...notifier.outbox].reverse().find((x) => x.subject.includes(c.j.mission.id)); await adminDo(actionLink(okMail, 'Approuver'));
-  await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/accept`, {}, B.j.token); await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/done`, {}, B.j.token);
+  await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/apply`, {}, B.j.token); await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/choose`, { userId: B.j.user.id }, poor.j.token); await proof(B.j.token, c.j.mission.id);
   assert.equal((await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/validate`, {}, poor.j.token)).s, 402);
 });
 
