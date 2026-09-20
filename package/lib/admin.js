@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import { uid, balanceOf } from './db.js';
 
 const SETTINGS = {
-  'fees.recharge': 'int', 'fees.withdraw': 'int', 'fees.mission': 'int', 'plan.create': 'int', 'plan.do': 'int',
+  'fees.recharge': 'int', 'fees.withdraw': 'int', 'fees.mission': 'int', 'plan.create': 'int', 'plan.do': 'int', 'plan.unverified': 'int',
   'limits.rechargeMin': 'int', 'limits.withdrawMin': 'int', adminOm: 'str', adminPhone: 'str', adminEmail: 'str',
   kycMode: ['auto', 'manual'], paymentMode: ['manual', 'cinetpay'], banner: 'str', maintenance: 'bool', 'company.contact': 'str',
 };
@@ -64,7 +64,7 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
   get('/users', (req) => {
     const q = req.query, w = ['1=1'], a = [];
     if (q.q) { w.push('(nom LIKE ? OR prenoms LIKE ? OR phone LIKE ? OR email LIKE ? OR id LIKE ?)'); a.push(...Array(5).fill(like(q.q))); }
-    if (q.status === 'suspended') w.push("status='suspended'"); if (['pending', 'verified', 'rejected'].includes(q.kyc)) { w.push('kyc_status=?'); a.push(q.kyc); }
+    if (q.status === 'suspended') w.push("status='suspended'"); if (['none', 'pending', 'verified', 'rejected'].includes(q.kyc)) { w.push('kyc_status=?'); a.push(q.kyc); }
     const limit = Math.min(Number(q.limit) || 50, 200), off = (Math.max(Number(q.page) || 1, 1) - 1) * limit;
     const total = one(`SELECT COUNT(*) c FROM users WHERE ${w.join(' AND ')}`, ...a).c;
     const rows = all(`SELECT * FROM users WHERE ${w.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`, ...a, limit, off).map((u) => ({ ...pubUser(u), created: one('SELECT COUNT(*) c FROM missions WHERE creator_id=?', u.id).c, done: one("SELECT COUNT(*) c FROM missions WHERE executor_id=? AND status='payee'", u.id).c }));
@@ -72,7 +72,8 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
   });
   get('/users/:id', (req) => {
     const u = userById(req.params.id); if (!u) throw bad('Utilisateur introuvable.', 404);
-    return { user: pubUser(u), ledger: all('SELECT * FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 100', u.id), missions: all('SELECT id,title,amount,status,mod,creator_id,executor_id,created_at FROM missions WHERE creator_id=? OR executor_id=? ORDER BY created_at DESC LIMIT 50', u.id, u.id), payments: all('SELECT id,kind,method,amount,fee,status,ref,created_at FROM payments WHERE user_id=? ORDER BY created_at DESC LIMIT 50', u.id) };
+    const kd = one('SELECT type,ocr,submitted_at,front IS NOT NULL f,back IS NOT NULL b,selfie IS NOT NULL s FROM kyc_docs WHERE user_id=?', u.id);
+    return { user: pubUser(u), kyc: kd ? { ...kd, ocr: JSON.parse(kd.ocr || '{}') } : null, ledger: all('SELECT * FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 100', u.id), missions: all('SELECT id,title,amount,status,mod,creator_id,executor_id,created_at FROM missions WHERE creator_id=? OR executor_id=? ORDER BY created_at DESC LIMIT 50', u.id, u.id), payments: all('SELECT id,kind,method,amount,fee,status,ref,created_at FROM payments WHERE user_id=? ORDER BY created_at DESC LIMIT 50', u.id) };
   });
   const target = (req) => { const u = userById(req.params.id); if (!u) throw bad('Utilisateur introuvable.', 404); return u; };
   post('/users/:id/status', (req) => { const u = target(req), s = req.body?.status === 'suspended' ? 'suspended' : 'active'; db.prepare('UPDATE users SET status=? WHERE id=?').run(s, u.id); audit('user_status', u.id, { status: s, reason: req.body?.reason || '' }); if (s === 'suspended') notifier.toUser(u, 'Compte suspendu', 'Votre compte J-WIN a été suspendu. Contactez le support pour en savoir plus.').catch(() => {}); return { status: s }; });
@@ -92,6 +93,13 @@ export function registerAdmin({ app, db, cfg, wrap, bad, limiter, userById, noti
     db.prepare('UPDATE users SET pw_hash=? WHERE id=?').run(bcrypt.hashSync(temp, 11), u.id); audit('user_reset_password', u.id);
     return { temporaryPassword: temp };
   });
+
+  const kycDir = path.join(path.dirname(path.resolve(cfg.uploadDir)), 'kyc');
+  r.get('/kyc/:id/:which', wrap(async (req, res) => {
+    if (!['front', 'back', 'selfie'].includes(req.params.which)) throw bad('Fichier inconnu.', 404);
+    const d = one('SELECT * FROM kyc_docs WHERE user_id=?', req.params.id), f = d?.[req.params.which]; if (!f) throw bad('Aucun fichier.', 404);
+    audit('kyc_view', req.params.id, req.params.which); res.set('Cache-Control', 'no-store'); res.sendFile(path.join(kycDir, f));
+  }));
 
   /* ----- missions ----- */
   get('/missions', (req) => {

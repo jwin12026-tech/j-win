@@ -52,7 +52,7 @@ test('OTP SMS + WhatsApp puis inscription', async () => {
   assert.equal(bad.s, 400);                                    // mineur refusé
   const r = await post('/api/register', { proof: v.j.proof, nom: 'Koffi', prenoms: 'Aya', email: 'aya@example.com', naissance: '1994-08-12', password: 'Motdepasse1', pieceType: 'cni', pieceNumero: 'C0123456789' });
   assert.equal(r.s, 201); token = r.j.token; user = r.j.user;
-  assert.equal(user.contact, '0701020304'); assert.equal(user.kycStatus, 'pending');
+  assert.equal(user.contact, '0701020304'); assert.equal(user.kycStatus, 'none');
   assert.equal((await post('/api/login', { phone: '0701020304', password: 'faux' })).s, 401);
   assert.equal((await post('/api/login', { phone: '0701020304', password: 'Motdepasse1' })).s, 200);
 });

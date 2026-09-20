@@ -32,6 +32,7 @@ export function openDb(file) {
       mod TEXT DEFAULT 'pending', mod_note TEXT, status TEXT DEFAULT 'attente', executor_id TEXT,
       accepted_at INTEGER, finished_at INTEGER, done_at INTEGER, rating INTEGER, created_at INTEGER);
     CREATE TABLE IF NOT EXISTS media(id TEXT PRIMARY KEY, mime TEXT, file TEXT, owner_id TEXT, created_at INTEGER);
+    CREATE TABLE IF NOT EXISTS kyc_docs(user_id TEXT PRIMARY KEY, type TEXT, front TEXT, back TEXT, selfie TEXT, ocr TEXT, submitted_at INTEGER);
     CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER, actor TEXT, action TEXT, target TEXT, detail TEXT);
     CREATE INDEX IF NOT EXISTS ix_mis_creator ON missions(creator_id);

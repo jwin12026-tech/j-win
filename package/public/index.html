@@ -881,6 +881,8 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .leaflet-container .leaflet-control-attribution svg{display:none!important}
 .btn-ok{background:#0f1f4d!important;color:#fff!important;border-color:#0f1f4d!important}
 
+.grid-in{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-content:start}
+
 /* required styles */
 
 .leaflet-pane,
@@ -2118,11 +2120,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div>
       <details>
         <summary>Comment créer un compte ?</summary>
-        <p>Deux possibilités. Avec votre messagerie (Gmail, iCloud, Outlook, Yahoo ou toute autre adresse) : vous renseignez votre nom, vos prénoms, votre année de naissance et votre adresse, puis vous vous connectez en un clic. Avec votre numéro : vous ajoutez un mot de passe et vous confirmez par un code reçu par SMS et par WhatsApp.</p>
+        <p>Deux possibilités. Avec votre messagerie (Gmail, iCloud, Outlook, Yahoo ou toute autre adresse) : vous renseignez votre nom, vos prénoms, votre année de naissance et votre adresse, puis vous vous connectez en un clic. Avec votre numéro : vous ajoutez votre e-mail et un mot de passe, et votre compte est créé tout de suite, sans code à saisir.</p>
       </details>
       <details>
         <summary>Comment mon identité est-elle vérifiée ?</summary>
-        <p>Vous fournissez votre numéro de CNI ou de passeport, la photo de la pièce (recto et verso) et un selfie pour la comparaison faciale. Une entreprise fournit sa DFE, son registre de commerce, son adresse postale et son site. J-WIN vérifie puis enregistre ces informations avant de vous ouvrir l'accès.</p>
+        <p>Vous pouvez vous inscrire sans pièce d'identité et réaliser ou créer jusqu'à 3 missions. Pour aller plus loin, ouvrez vos paramètres : vous fournissez votre numéro de CNI ou de passeport, la photo de la pièce (recto et verso) et un selfie. Une fois le contrôle terminé, les limites sont levées et les retraits deviennent possibles. Une entreprise fournit sa DFE, son registre de commerce, son adresse postale et son site. J-WIN vérifie ces informations avant d'ouvrir l'accès complet.</p>
       </details>
       <details>
         <summary>Quand suis-je payé ?</summary>
@@ -2215,46 +2217,25 @@ window.JWIN_CONFIG = {
   </div>
   <div class="dlg-body">
 
-    <!-- ===== Inscription, étape 1 : pièce d'identité ===== -->
-    <section class="au-view" data-av="idv" hidden>
-      <div class="stepper" aria-label="Étape 1 sur 2"><span class="on">1</span><i></i><span>2</span><b>Étape 1 sur 2</b></div>
-      <h2 class="au-h">Vérifions votre identité</h2>
-      <p class="au-sub">Photographiez votre pièce d'identité : vos informations sont lues automatiquement. Cette vérification se fait une seule fois, à l'inscription.</p>
-      <form class="au-form" id="fId" novalidate>
-        <div class="field"><label for="iType">Type de pièce</label>
-          <select class="input" id="iType"><option value="cni">Carte nationale d'identité</option><option value="passeport">Passeport</option></select></div>
-        <div class="row2">
-          <div class="field"><label for="iRecto">Photo de la pièce (recto)</label><input class="input" id="iRecto" type="file" accept="image/*"><p class="err" id="iRectoE" role="alert"></p></div>
-          <div class="field" id="iVersoW"><label for="iVerso">Verso de la carte</label><input class="input" id="iVerso" type="file" accept="image/*"><p class="err" id="iVersoE" role="alert"></p></div>
-        </div>
-        <div class="field"><label for="iSelfie">Selfie avec la pièce</label><input class="input" id="iSelfie" type="file" accept="image/*" capture="user"><p class="err" id="iSelfieE" role="alert"></p></div>
-        <div class="ocr-box" id="ocrBox" aria-live="polite"></div>
-        <div class="row2">
-          <div class="field"><label for="iNom">Nom</label><input class="input" id="iNom" autocomplete="family-name"><p class="err" id="iNomE" role="alert"></p></div>
-          <div class="field"><label for="iPre">Prénoms</label><input class="input" id="iPre" autocomplete="given-name"><p class="err" id="iPreE" role="alert"></p></div>
-        </div>
-        <div class="row2">
-          <div class="field dp"><label for="iDob">Date de naissance</label>
-            <div class="dp-in"><input class="input" id="iDob" inputmode="numeric" maxlength="10" placeholder="JJ/MM/AAAA" autocomplete="bday"><button class="dp-btn" type="button" data-act="dp-toggle" aria-label="Ouvrir le calendrier" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></button></div>
-            <div class="dp-pop" id="dpPop" hidden role="dialog" aria-label="Choisir la date de naissance"></div>
-            <p class="err" id="iDobE" role="alert"></p></div>
-          <div class="field"><label for="iNum">Numéro de la pièce</label><input class="input" id="iNum" autocomplete="off" placeholder="C0123456789"><p class="err" id="iNumE" role="alert"></p></div>
-        </div>
-        <button class="btn btn-primary" type="submit">Continuer</button>
-      </form>
-      <p class="au-alt">Déjà inscrit ? <button class="link" type="button" data-act="auth-login">Se connecter</button></p>
-    </section>
+
 
     <!-- ===== Inscription, étape 2 : accès au compte ===== -->
     <section class="au-view" data-av="signup" hidden>
-      <div class="stepper" aria-label="Étape 2 sur 2"><span class="done">1</span><i class="on"></i><span class="on">2</span><b>Étape 2 sur 2</b></div>
-      <div class="idcard" id="idSummary"></div>
-      <h2 class="au-h">Créez votre accès</h2>
+      <h2 class="au-h">Créez votre compte</h2>
+      <p class="au-sub">Quelques informations suffisent, sans code à saisir. Vous pourrez vérifier votre pièce d'identité plus tard, dans vos paramètres.</p>
       <div class="seg2" role="tablist" aria-label="Méthode d'inscription">
         <button type="button" role="tab" data-am="sso" aria-selected="true">Avec ma messagerie</button>
         <button type="button" role="tab" data-am="phone" aria-selected="false">Avec mon numéro</button>
       </div>
       <form class="au-form" id="fSignup" data-method="sso" novalidate>
+        <div class="row2">
+          <div class="field"><label for="sNom">Nom</label><input class="input" id="sNom" autocomplete="family-name"><p class="err" id="sNomE" role="alert"></p></div>
+          <div class="field"><label for="sPre">Prénoms</label><input class="input" id="sPre" autocomplete="given-name"><p class="err" id="sPreE" role="alert"></p></div>
+        </div>
+        <div class="field dp"><label for="sDob">Date de naissance</label>
+            <div class="dp-in"><input class="input" id="sDob" inputmode="numeric" maxlength="10" placeholder="JJ/MM/AAAA" autocomplete="bday"><button class="dp-btn" type="button" data-act="dp-toggle" aria-label="Ouvrir le calendrier" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></button></div>
+            <div class="dp-pop" id="dpPop" hidden role="dialog" aria-label="Choisir la date de naissance"></div>
+            <p class="err" id="sDobE" role="alert"></p></div>
         <div class="field only-sso"><label for="sAddr">Adresse</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="input" id="sAddr" style="flex:1 1 170px" autocomplete="street-address" placeholder="Commune, quartier"><button class="btn btn-ghost btn-sm" type="button" data-act="locate" style="white-space:nowrap"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg>Me localiser</button></div>
           <p class="err" id="sAddrE" role="alert"></p></div>
@@ -2279,7 +2260,7 @@ window.JWIN_CONFIG = {
           <div class="sso" data-sso data-ctx="signup"></div>
         </div>
         <button class="btn btn-primary only-phone" type="submit">Créer mon compte</button>
-        <p class="hint only-phone" style="text-align:center">Un code de confirmation vous sera envoyé par SMS et par WhatsApp.</p>
+        <p class="hint only-phone" style="text-align:center">Votre compte est créé tout de suite. Vous recevez un e-mail de confirmation.</p>
       </form>
       <p class="au-alt">Déjà inscrit ? <button class="link" type="button" data-act="auth-login">Se connecter</button></p>
     </section>
@@ -2287,11 +2268,7 @@ window.JWIN_CONFIG = {
     <!-- ===== Connexion ===== -->
     <section class="au-view" data-av="login" hidden>
       <h2 class="au-h">Se connecter</h2>
-      <p class="au-sub">Choisissez la méthode qui vous convient.</p>
-      <div class="seg2" role="tablist" aria-label="Méthode de connexion">
-        <button type="button" role="tab" data-lt="pw" aria-selected="true">Mot de passe</button>
-        <button type="button" role="tab" data-lt="code" aria-selected="false">Code SMS ou WhatsApp</button>
-      </div>
+      <p class="au-sub">Avec votre numéro et votre mot de passe, ou avec votre messagerie.</p>
       <form class="au-form" id="fLoginPw" novalidate>
         <div class="field"><label for="lTel">Contact</label>
           <div class="phone-in" id="lTelW"><span>+225</span><input class="input js-phone" id="lTel" type="tel" inputmode="tel" autocomplete="username" placeholder="07 00 00 00 00"></div>
@@ -2344,15 +2321,10 @@ window.JWIN_CONFIG = {
     <section class="au-view" data-av="forgot" hidden>
       <button class="back" type="button" data-act="auth-login"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Retour</button>
       <h2 class="au-h">Mot de passe oublié</h2>
-      <p class="au-sub">Entrez votre numéro. Nous vous envoyons un code pour choisir un nouveau mot de passe.</p>
+      <p class="au-sub">Entrez l'adresse e-mail de votre compte. Nous vous envoyons un lien pour choisir un nouveau mot de passe.</p>
       <form class="au-form" id="fForgot" novalidate>
-        <div class="field"><label for="fTel">Contact</label>
-          <div class="phone-in" id="fTelW"><span>+225</span><input class="input js-phone" id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="07 00 00 00 00"></div>
-          <p class="err" id="fTelE" role="alert"></p></div>
-        <div class="row2">
-          <button class="btn btn-primary" type="button" data-act="forgot-send" data-ch="sms"><svg class="lg lg-mark" aria-hidden="true"><use href="#l-sms"/></svg>Recevoir par SMS</button>
-          <button class="btn btn-ghost" type="button" data-act="forgot-send" data-ch="whatsapp"><svg class="lg lg-mark" aria-hidden="true"><use href="#l-whatsapp"/></svg>Recevoir par WhatsApp</button>
-        </div>
+        <div class="field"><label for="fMail">Adresse e-mail</label><input class="input" id="fMail" type="email" inputmode="email" autocomplete="email" placeholder="prenom@exemple.com"><p class="err" id="fMailE" role="alert"></p></div>
+        <button class="btn btn-primary" type="button" data-act="forgot-send">Recevoir le lien</button>
       </form>
     </section>
 
@@ -2556,10 +2528,11 @@ window.JWIN_CONFIG = {
               <button class="btn btn-primary" type="submit">Enregistrer</button>
             </form>
           </article>
-          <div class="aview">
+          <div class="grid-in">
             <article class="card">
               <div class="card-head"><h3>Vérification d'identité</h3><span class="st st-attente" id="kycSt">Non vérifiée</span></div>
               <p class="muted" id="kycTxt"></p>
+              <div id="kycAct" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem"></div>
             </article>
             <article class="card">
               <div class="card-head"><h3>Sécurité</h3></div>
@@ -2954,7 +2927,7 @@ const rid=()=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i
 
 function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)%4294967296;return s/4294967296}}
 function newState(u){
-  const st={wallet:{balance:0,tx:[]},plan:'standard',mine:[],market:JSON.parse(JSON.stringify(MARKET)),notifs:[],kyc:LIVE?(u.kycStatus||'pending'):'verified',invoices:[],invSeq:0,profile:{adresse:u.adresse||'',sex:'',lang:'fr'}};
+  const st={wallet:{balance:0,tx:[]},plan:'standard',mine:[],market:JSON.parse(JSON.stringify(MARKET)),notifs:[],kyc:LIVE?(u.kycStatus||'none'):(u.id==='demo'?'verified':'none'),invoices:[],invSeq:0,profile:{adresse:u.adresse||'',sex:'',lang:'fr'}};
   st.notifs.push({id:'n'+Date.now(),type:'star',title:'Bienvenue sur J-WIN',text:'Votre compte est créé. Trouvez votre première mission ou publiez la vôtre.',at:Date.now(),read:false,chan:[]});
   return st;
 }
@@ -3023,15 +2996,13 @@ function showAuth(v){
   $$('#auth [data-av]').forEach(s=>s.hidden=s.dataset.av!==v);
   if(v!=='otp'){clearInterval(A.tick)}
   dpClose();
-  if(v==='idv')initIdStep();
-  if(v==='signup')renderIdSummary();
   const first=$('#auth [data-av="'+v+'"] input:not([type=checkbox])');
   setTimeout(()=>{if(first&&auth.open)first.focus({preventScroll:true})},60);
   auth.scrollTop=0;
 }
 function openAuth(mode,o){
   o=o||{};A.plan=o.plan||null;
-  if(mode==='signup'){setMethod(A.method);showAuth(A.identity?'signup':'idv')}
+  if(mode==='signup'){setMethod(A.method);showAuth('signup')}
   else{setLogin('pw');showAuth('login')}
   openD(auth);
 }
@@ -3053,12 +3024,16 @@ function fe(id,msg){
   return !msg;
 }
 function validateCommon(){
-  if(!A.identity){showAuth('idv');return false}
-  const ok=fe('sCgu',$('#sCgu').checked?'':'Vous devez approuver les CGU pour continuer.');
-  if(!ok)$('#sCgu').focus();
+  let ok=true,first=null;
+  const chk=(id,c,m)=>{const r=fe(id,c?'':m);if(!r){ok=false;if(!first)first=$('#'+id)}};
+  chk('sNom',$('#sNom').value.trim().length>=2,'Entrez votre nom.');
+  chk('sPre',$('#sPre').value.trim().length>=2,'Entrez vos prénoms.');
+  chk('sDob',validDob($('#sDob').value),'Choisissez une date de naissance valide. J-WIN est réservé aux personnes de 18 ans ou plus.');
+  chk('sCgu',$('#sCgu').checked,'Vous devez approuver les CGU pour continuer.');
+  if(first)first.focus();
   return ok;
 }
-function profileFromForm(){const i=A.identity||{};return{nom:i.nom,prenoms:i.prenoms,annee:Number((i.naissance||'').slice(0,4)),naissance:i.naissance,pieceType:i.docType,pieceNumero:i.docNumber}}
+function profileFromForm(){const d=parseFr($('#sDob').value);return{nom:$('#sNom').value.trim().toUpperCase(),prenoms:tcase($('#sPre').value.trim()),annee:d?d.getFullYear():0,naissance:d?toIso(d):''}}
 
 /* --- Mini calendrier de naissance --- */
 const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
@@ -3076,7 +3051,7 @@ function dpClamp(){
 function dpRender(){
   const pop=$('#dpPop');if(!pop)return;
   dpClamp();
-  const mx=maxBirth(),cur=parseFr($('#iDob').value),first=new Date(DP.y,DP.m,1),lead=(first.getDay()+6)%7,days=new Date(DP.y,DP.m+1,0).getDate();
+  const mx=maxBirth(),cur=parseFr($('#sDob').value),first=new Date(DP.y,DP.m,1),lead=(first.getDay()+6)%7,days=new Date(DP.y,DP.m+1,0).getDate();
   const atMax=DP.y===mx.getFullYear()&&DP.m>=mx.getMonth(),atMin=DP.y===1920&&DP.m===0;
   let yrs='';for(let y=mx.getFullYear();y>=1920;y--)yrs+=`<option value="${y}"${y===DP.y?' selected':''}>${y}</option>`;
   let cells='';for(let i=0;i<lead;i++)cells+='<span></span>';
@@ -3093,7 +3068,7 @@ function dpRender(){
     <div class="dp-f"><span>Choisissez le jour, le mois et l'année.</span><button type="button" class="link-btn" data-act="dp-close">Fermer</button></div>`;
 }
 function dpOpen(){
-  const cur=parseFr($('#iDob').value);
+  const cur=parseFr($('#sDob').value);
   if(cur){DP.y=cur.getFullYear();DP.m=cur.getMonth()}else{DP.y=Math.min(1995,maxBirth().getFullYear());DP.m=0}
   DP.open=true;$('#dpPop').hidden=false;$('[data-act="dp-toggle"]').setAttribute('aria-expanded','true');dpRender();
   setTimeout(()=>{try{$('#dpPop').scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}},30);
@@ -3103,21 +3078,39 @@ function dpClose(){
 }
 function dpShift(n){DP.m+=n;if(DP.m<0){DP.m=11;DP.y--}if(DP.m>11){DP.m=0;DP.y++}dpRender()}
 function dpPick(iso){
-  const d=new Date(iso+'T00:00:00');$('#iDob').value=toFr(d);fe('iDob','');dpClose();$('#iNum').focus();
+  const d=new Date(iso+'T00:00:00');$('#sDob').value=toFr(d);fe('sDob','');dpClose();
 }
 
-/* --- Étape 1 : pièce d'identité + lecture automatique (OCR) --- */
+/* --- Vérification d'identité (paramètres) : pièce + selfie, lecture automatique (OCR) --- */
+const KYC={ocr:null};
+const UNVER=()=>((SERVER.plan&&SERVER.plan.unverified)!=null?SERVER.plan.unverified:3);
+const isVer=()=>!!S&&S.kyc==='verified';
+const shrinkImg=async f=>{try{return dataUrlToBlob(await imgToDataUrl(f,2000,.88))}catch(e){return f}};
+const normName=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/gi,'').toLowerCase();
 function renderOcrBox(state,msg){
   const b=$('#ocrBox');if(!b)return;b.className='ocr-box'+(state==='ok'?' ok':(state==='warn'||state==='fail'?' warn':''));
   if(state==='busy'){b.innerHTML='<span class="spin" aria-hidden="true"></span><span>Lecture de votre pièce en cours…</span>';return}
   if(state==='ok'||state==='warn'||state==='fail'){b.innerHTML='<span>'+esc(msg)+'</span>'+(LIVE&&SERVER.ocr?'<button class="btn btn-ghost btn-sm" type="button" data-act="ocr-run">Relire</button>':'');return}
-  if(LIVE&&SERVER.ocr)b.innerHTML='<span>Ajoutez les photos : la lecture automatique remplit les champs ci-dessous. Vous pouvez tout corriger.</span><button class="btn btn-ghost btn-sm" type="button" data-act="ocr-run">Lire ma pièce</button>';
-  else b.innerHTML='<span>'+(LIVE?'Lecture automatique indisponible pour le moment : saisissez les informations de votre pièce.':'Version de test : la lecture automatique de la pièce demande le serveur J-WIN. Saisissez les informations de votre pièce ; les photos sont facultatives et ne quittent pas votre appareil.')+'</span>';
+  if(LIVE&&SERVER.ocr)b.innerHTML='<span>Ajoutez les photos : le numéro de la pièce est lu automatiquement. Vous pouvez le corriger.</span><button class="btn btn-ghost btn-sm" type="button" data-act="ocr-run">Lire ma pièce</button>';
+  else b.innerHTML='<span>'+(LIVE?'Lecture automatique indisponible pour le moment : saisissez le numéro de votre pièce.':'Version de test : la lecture automatique demande le serveur J-WIN. Saisissez le numéro de votre pièce.')+'</span>';
 }
-function initIdStep(){
-  $('#iVersoW').hidden=$('#iType').value==='passeport';
+function openKyc(){
+  if(S.kyc==='pending'||S.kyc==='verified')return;
+  KYC.ocr=null;
+  dlgOpen('Vérifier mon identité',`<form class="au-form" id="fKyc" novalidate>
+    <p class="muted">Photographiez votre pièce d'identité, puis faites un selfie en la tenant près de votre visage. Une fois le contrôle terminé, la limite de ${UNVER()} missions est levée et vous pouvez retirer vos gains.</p>
+    <div class="field"><label for="iType">Type de pièce</label><select class="input" id="iType"><option value="cni">Carte nationale d'identité</option><option value="passeport">Passeport</option></select></div>
+    <div class="row2">
+      <div class="field"><label for="iRecto">Photo de la pièce (recto)</label><input class="input" id="iRecto" type="file" accept="image/*"><p class="err" id="iRectoE" role="alert"></p></div>
+      <div class="field" id="iVersoW"><label for="iVerso">Verso de la carte</label><input class="input" id="iVerso" type="file" accept="image/*"><p class="err" id="iVersoE" role="alert"></p></div>
+    </div>
+    <div class="field"><label for="iSelfie">Selfie avec la pièce</label><input class="input" id="iSelfie" type="file" accept="image/*" capture="user"><p class="err" id="iSelfieE" role="alert"></p></div>
+    <div class="ocr-box" id="ocrBox" aria-live="polite"></div>
+    <div class="field"><label for="iNum">Numéro de la pièce</label><input class="input" id="iNum" autocomplete="off" placeholder="C0123456789"><p class="err" id="iNumE" role="alert"></p></div>
+    <div><label class="check"><input type="checkbox" id="kOk"><span>J'autorise J-WIN à conserver ces images le temps du contrôle d'identité.</span></label><p class="err" id="kOkE" role="alert"></p></div>
+    <button class="btn btn-primary" type="submit">Envoyer pour vérification</button>
+  </form>`,true);
   renderOcrBox('idle');
-  if(!DP.bound){DP.bound=true}
 }
 async function ocrRun(){
   if(!(LIVE&&SERVER.ocr))return;
@@ -3125,44 +3118,48 @@ async function ocrRun(){
   if(!front&&!back)return renderOcrBox('warn','Ajoutez d\'abord la photo du recto de votre pièce.');
   renderOcrBox('busy');
   const fd=new FormData();
-  /* les photos de téléphone sont réduites (2000 px) : envoi plus rapide, lecture plus fiable, et les formats exotiques (HEIC) sont convertis en JPEG */
-  const shrink=async f=>{try{return dataUrlToBlob(await imgToDataUrl(f,2000,.88))}catch(e){return f}};
-  if(front)fd.append('front',await shrink(front),'recto.jpg');if(back)fd.append('back',await shrink(back),'verso.jpg');
+  if(front)fd.append('front',await shrinkImg(front),'recto.jpg');if(back)fd.append('back',await shrinkImg(back),'verso.jpg');
   try{
     const r=await http('/api/kyc/ocr',{body:fd});
-    if(r.nom)$('#iNom').value=String(r.nom).toUpperCase();
-    if(r.prenoms)$('#iPre').value=tcase(r.prenoms);
-    if(r.dob){$('#iDob').value=isoToFr(r.dob)}
     if(r.docNumber)$('#iNum').value=r.docNumber;
     if(r.docType==='cni'||r.docType==='passeport'){$('#iType').value=r.docType;$('#iVersoW').hidden=r.docType==='passeport'}
-    ['iNom','iPre','iDob','iNum'].forEach(id=>fe(id,''));
-    if(r.confidence==='high')renderOcrBox('ok','Pièce lue et vérifiée (zone lisible par machine). Contrôlez les informations ci-dessous.');
-    else if(r.confidence==='medium')renderOcrBox('warn','Lecture partielle : vérifiez chaque champ avant de continuer. Ajoutez le verso pour une meilleure lecture.');
-    else if(r.confidence==='low')renderOcrBox('warn','Lecture incomplète : complétez les champs manquants.');
-    else renderOcrBox('fail','Impossible de lire la pièce. Refaites la photo : bien à plat, bien éclairée, sans reflet, avec la bande de caractères du bas visible. Vous pouvez aussi saisir les informations.');
+    KYC.ocr={nom:r.nom||'',prenoms:r.prenoms||'',dob:r.dob||'',confidence:r.confidence||''};
+    fe('iNum','');
+    const who=[r.nom,r.prenoms].filter(Boolean).join(' ');
+    const mism=r.nom&&normName(r.nom)!==normName(user.nom);
+    if(r.confidence==='high'||r.confidence==='medium'){
+      if(mism)renderOcrBox('warn','Pièce lue : '+who+'. Ce nom ne correspond pas à celui de votre compte ('+user.nom+'). Vérifiez que c\'est bien votre pièce.');
+      else renderOcrBox(r.confidence==='high'?'ok':'warn','Pièce lue : '+who+(r.dob?', né(e) le '+isoToFr(r.dob):'')+'. Contrôlez le numéro ci-dessous.');
+    }else if(r.confidence==='low')renderOcrBox('warn','Lecture incomplète : complétez le numéro de la pièce.');
+    else renderOcrBox('fail','Impossible de lire la pièce. Refaites la photo : bien à plat, bien éclairée, sans reflet, avec la bande de caractères du bas visible. Vous pouvez aussi saisir le numéro.');
   }catch(e){renderOcrBox('fail',e.message)}
 }
-function idSubmit(){
-  let ok=true,first=null;
-  const chk=(id,cond,msg)=>{const r=fe(id,cond?'':msg);if(!r){ok=false;if(!first)first=$('#'+id)}};
+async function kycSubmit(){
   const type=$('#iType').value,num=$('#iNum').value.trim().replace(/\s/g,'').toUpperCase();
-  chk('iNom',$('#iNom').value.trim().length>=2,'Entrez votre nom.');
-  chk('iPre',$('#iPre').value.trim().length>=2,'Entrez vos prénoms.');
-  chk('iDob',validDob($('#iDob').value),'Choisissez une date de naissance valide. J-WIN est réservé aux personnes de 18 ans ou plus.');
-  const fmtOk=type==='cni'?/^([0-9]{11}|[A-Z]\d{10})$/.test(num):/^[A-Z0-9]{6,9}$/.test(num);
-  chk('iNum',fmtOk,type==='cni'?'Format inattendu. Exemple : C0123456789 (une lettre et 10 chiffres) ou 11 chiffres.':'Numéro de passeport invalide (6 à 9 lettres ou chiffres).');
+  let ok=true,first=null;
+  const chk=(id,c,m)=>{const r=fe(id,c?'':m);if(!r){ok=false;if(!first)first=$('#'+id)}};
+  chk('iNum',type==='cni'?/^([0-9]{11}|[A-Z]\d{10})$/.test(num):/^[A-Z0-9]{6,9}$/.test(num),type==='cni'?'Format inattendu. Exemple : C0123456789 (une lettre et 10 chiffres) ou 11 chiffres.':'Numéro de passeport invalide (6 à 9 lettres ou chiffres).');
   if(!CONFIG.DEMO){
     chk('iRecto',$('#iRecto').files.length>0,'Ajoutez la photo du recto de votre pièce.');
     if(type==='cni')chk('iVerso',$('#iVerso').files.length>0,'Ajoutez la photo du verso de votre pièce.');
     chk('iSelfie',$('#iSelfie').files.length>0,'Ajoutez un selfie avec votre pièce.');
   }
+  chk('kOk',$('#kOk').checked,'Votre accord est nécessaire pour effectuer le contrôle.');
   if(!ok){if(first)first.focus();return}
-  A.identity={nom:$('#iNom').value.trim().toUpperCase(),prenoms:tcase($('#iPre').value.trim()),naissance:toIso(parseFr($('#iDob').value)),docType:type,docNumber:num};
-  showAuth('signup');
+  if(LIVE){
+    const fd=new FormData(),o=KYC.ocr||{};
+    fd.append('type',type);fd.append('number',num);fd.append('ocrNom',o.nom||'');fd.append('ocrPrenoms',o.prenoms||'');fd.append('ocrDob',o.dob||'');fd.append('ocrConfidence',o.confidence||'');
+    fd.append('front',await shrinkImg($('#iRecto').files[0]),'recto.jpg');
+    if(type==='cni')fd.append('back',await shrinkImg($('#iVerso').files[0]),'verso.jpg');
+    fd.append('selfie',await shrinkImg($('#iSelfie').files[0]),'selfie.jpg');
+    try{const r=await http('/api/kyc/submit',{body:fd});S.kyc=r.status}catch(e){return fe('iNum',e.message)}
+  }else S.kyc='pending';
+  notify('send',S.kyc==='verified'?'Identité vérifiée':'Vérification envoyée',S.kyc==='verified'?'Votre identité est vérifiée : les limites sont levées.':'Votre pièce et votre selfie sont en cours de contrôle. Vous serez prévenu par SMS et par e-mail.',['sms','mail']);
+  saveS();dlgClose();render();toast(S.kyc==='verified'?'Identité vérifiée.':'Vérification envoyée. Nous vous prévenons dès la fin du contrôle.');
 }
-function renderIdSummary(){
-  const i=A.identity;if(!i)return;
-  $('#idSummary').innerHTML=`<div><b>${esc(i.prenoms)} ${esc(i.nom)}</b><small>Né(e) le ${isoToFr(i.naissance)} · ${i.docType==='cni'?'Carte d\'identité':'Passeport'}</small></div><button class="link" type="button" data-act="signup-back">Modifier</button>`;
+async function syncMe(){
+  if(!LIVE||!user)return;
+  try{const r=await http('/api/me');if(r.user&&r.user.kycStatus&&r.user.kycStatus!==S.kyc){S.kyc=r.user.kycStatus;saveS();render()}}catch(e){}
 }
 
 /* --- Avis des testeurs --- */
@@ -3278,8 +3275,8 @@ function ssoStart(p,ctx){
   $('#ssoCtx').textContent=ctx==='signup'?'Inscription':'Connexion';
   if(p==='other'){
     $('#ssoH').textContent='Confirmez votre adresse e-mail';
-    $('#ssoSub').textContent='Nous vous envoyons un code de confirmation. Fonctionne avec toute messagerie.';
-    $('#ssoBtn').textContent='Recevoir le code';
+    $('#ssoSub').textContent='Indiquez votre adresse e-mail : toute messagerie fonctionne.';
+    $('#ssoBtn').textContent='Continuer';
   }else{
     $('#ssoH').textContent='J-WIN souhaite accéder à votre compte';
     $('#ssoSub').textContent='J-WIN recevra votre nom et votre adresse e-mail. Aucun mot de passe n\'est partagé.';
@@ -3309,7 +3306,7 @@ function enterApp(u,o){
   if(!S.profile)S.profile={adresse:u.adresse||'',sex:'',lang:'fr'};
   if(!S.invoices){S.invoices=[];S.invSeq=0}
   S.market.forEach(normM);S.mine.forEach(normM);
-  if(LIVE)S.kyc=u.kycStatus||S.kyc;else S.kyc='verified';
+  if(LIVE)S.kyc=u.kycStatus||'none';else if(!S.kyc)S.kyc=u.id==='demo'?'verified':'none';
   if(o.remember!==undefined)store.set('jwin-session',{uid:u.id},o.remember);
   saveS();closeAuth();
   ['fSignup','fLoginPw','fLoginCode','fForgot','fId'].forEach(id=>{const f=$('#'+id);if(f)f.reset()});
@@ -3320,6 +3317,7 @@ function enterApp(u,o){
   if(LIVE){syncWallet();syncMissions()}
   if(o.welcome){
     const n=u.prenoms.split(' ')[0];
+    notify('star','Vérifiez votre identité','Sans vérification, vous pouvez créer et réaliser '+UNVER()+' missions. Envoyez votre pièce d\'identité et un selfie depuis Paramètres pour lever cette limite et retirer vos gains.');saveS();
     if(!LIVE){notify('check','Compte créé','Un e-mail de confirmation a été envoyé à '+(u.email||'votre adresse')+' et un SMS au '+fmtPhone(u.contact||'')+' (simulation en version test).',['mail','sms']);saveS();render()}
     else if(o.notified){notify('check','Compte créé','Un e-mail de confirmation et un SMS vous ont été envoyés.',['mail','sms']);saveS()}
     setTimeout(()=>toast('Bienvenue sur J-WIN, '+n+' !'+(LIVE?(o.notified?' E-mail et SMS de confirmation envoyés.':''):' (E-mail et SMS simulés en version test.)')),200);
@@ -3367,8 +3365,9 @@ const initials=()=>((user.prenoms||'?')[0]+(user.nom||'')[0]).toUpperCase();
 const firstName=()=>(user.prenoms||'').split(' ')[0];
 const fullName=()=>(user.prenoms+' '+user.nom).trim();
 const planOf=()=>PLANS[S.plan]||PLANS.standard;
-function usage(k){const lim=Date.now()-planOf().days*DAY;return S.mine.filter(m=>k==='create'?(m.role==='donneur'&&m.status!=='annulee'&&m.mod!=='rejetee'&&m.createdAt>=lim):(m.role==='real'&&m.status!=='annulee'&&(m.acceptedAt||m.createdAt)>=lim)).length}
-function quotaLeft(k){const q=planOf().q[k];return q===Infinity?Infinity:Math.max(0,q-usage(k))}
+function usage(k){const lim=isVer()?Date.now()-planOf().days*DAY:0;return S.mine.filter(m=>k==='create'?(m.role==='donneur'&&m.status!=='annulee'&&m.mod!=='rejetee'&&m.createdAt>=lim):(m.role==='real'&&m.status!=='annulee'&&(m.acceptedAt||m.createdAt)>=lim)).length}
+const quotaLimit=k=>isVer()?planOf().q[k]:UNVER();
+function quotaLeft(k){const q=quotaLimit(k);return q===Infinity?Infinity:Math.max(0,q-usage(k))}
 const activeMissions=()=>S.mine.filter(m=>['attente','cours','terminee'].includes(m.status)&&m.mod!=='rejetee');
 function notify(type,title,text,chan){S.notifs.unshift({id:'n'+Date.now()+rndHex(1),type,title,text,at:Date.now(),read:false,chan:chan||[]})}
 function findM(id){return S.market.find(m=>m.id===id)||S.mine.find(m=>m.id===id)}
@@ -3526,8 +3525,8 @@ function renderWallet(){
   $('#wMonth').innerHTML='WIN mensuel : <b>'+F(sumWin(30))+'</b>';
   const p=planOf();
   $('#planName').textContent='Offre '+p.n;
-  $('#planSub').textContent=(p.price?F(p.price)+' par '+p.per+'. ':'Gratuite. ')+'Créations : '+qTxt(p.q.create)+', réalisations : '+qTxt(p.q.do)+' par '+p.per+'.';
-  $('#quotaBox').innerHTML=[['create','Missions créées'],['do','Missions réalisées']].map(function(r){const k=r[0],q=p.q[k],u=usage(k),pct=q===Infinity?0:Math.min(100,u/q*100);return `<div class="quota-row"><span>${r[1]}</span><span class="bar-track"><i class="${q!==Infinity&&u>=q?'full':''}" style="width:${pct}%"></i></span><span>${u} / ${q===Infinity?'∞':q}</span></div>`}).join('');
+  $('#planSub').textContent=isVer()?(p.price?F(p.price)+' par '+p.per+'. ':'Gratuite. ')+'Créations : '+qTxt(p.q.create)+', réalisations : '+qTxt(p.q.do)+' par '+p.per+'.':'Profil non vérifié : '+UNVER()+' missions créées et '+UNVER()+' réalisées au maximum. Vérifiez votre identité dans Paramètres pour passer à '+qTxt(p.q.create)+' et '+qTxt(p.q.do)+'.';
+  $('#quotaBox').innerHTML=[['create','Missions créées'],['do','Missions réalisées']].map(function(r){const k=r[0],q=quotaLimit(k),u=usage(k),pct=q===Infinity?0:Math.min(100,u/q*100);return `<div class="quota-row"><span>${r[1]}</span><span class="bar-track"><i class="${q!==Infinity&&u>=q?'full':''}" style="width:${pct}%"></i></span><span>${u} / ${q===Infinity?'∞':q}</span></div>`}).join('');
   const tx=S.wallet.tx.slice().sort((a,b)=>b.at-a.at).slice(0,12);
   $('#txList').innerHTML=tx.length?tx.map(t=>{
     const m=METHODS[t.method];
@@ -3545,9 +3544,10 @@ function renderSettings(){
   $('#profKv').innerHTML=kv.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
   $('#pAddr').value=S.profile.adresse||'';$('#pSex').value=S.profile.sex||'';$('#pLang').value=S.profile.lang||'fr';
   const k=S.kyc,el=$('#kycSt');
-  el.textContent=k==='verified'?'Vérifiée':(k==='pending'?'En cours':'Non vérifiée');
-  el.className='st '+(k==='verified'?'st-payee':(k==='pending'?'st-cours':'st-attente'));
-  $('#kycTxt').textContent=k==='verified'?'Votre identité a été vérifiée lors de votre inscription. Vous pouvez accepter et publier des missions.':'Votre pièce d\'identité est en cours de contrôle. Vous serez notifié dès que c\'est terminé.';
+  el.textContent=({verified:'Vérifiée',pending:'En cours',rejected:'Refusée'})[k]||'Non vérifiée';
+  el.className='st '+(k==='verified'?'st-payee':(k==='pending'?'st-cours':(k==='rejected'?'st-annulee':'st-attente')));
+  $('#kycTxt').textContent=k==='verified'?'Votre identité est vérifiée. Vous n\'avez plus de limite liée à la vérification et vous pouvez retirer vos gains.':(k==='pending'?'Votre pièce d\'identité et votre selfie sont en cours de contrôle. Vous serez prévenu par SMS et par e-mail.':(k==='rejected'?'Votre vérification a été refusée. Refaites-la avec des photos nettes et lisibles.':'Votre profil n\'est pas vérifié : vous pouvez créer '+UNVER()+' missions et en réaliser '+UNVER()+' au maximum, et les retraits sont impossibles. Vérifiez votre identité pour lever ces limites.'));
+  $('#kycAct').innerHTML=(k==='pending'||k==='verified'?'':'<button class="btn btn-primary" type="button" data-act="kyc-open">'+(k==='rejected'?'Refaire la vérification':'Vérifier mon identité')+'</button>')+(k==='pending'&&CONFIG.DEMO?'<button class="btn btn-ghost" type="button" data-act="kyc-sim">Démo : simuler la validation</button>':'');
   const hasPw=!!user.pwHash&&!LIVE;
   $('#fChangePw').hidden=!hasPw;
   $('#secTxt').textContent=LIVE?'Pour changer votre mot de passe, utilisez « Mot de passe oublié » sur l\'écran de connexion.':hasPw?'Choisissez un mot de passe que vous n\'utilisez nulle part ailleurs.':(user.id==='demo'?'Le compte de démonstration n\'a pas de mot de passe.':'Vous vous connectez avec votre messagerie. Il n\'y a pas de mot de passe à gérer.');
@@ -3572,16 +3572,13 @@ function go(v){
   $('#viewTitle').innerHTML='<span class="t-long">'+esc(TITLES[v])+'</span><span class="t-short">'+esc(v==='dashboard'?'Accueil':(v==='history'?'Historique':TITLES[v]))+'</span>';
   render();window.scrollTo(0,0);
   if(LIVE&&v==='wallet')syncWallet();
+  if(LIVE&&(v==='settings'||v==='dashboard'))syncMe();
   if(LIVE&&(v==='missions'||v==='dashboard'||v==='history'))syncMissions();
 }
 function commit(){saveS();render();if(dlg.open&&UI.dlgMission)openMission(UI.dlgMission,true)}
 
 /* ---------- vérification d'identité ---------- */
-function needKyc(){
-  if(!LIVE||S.kyc==='verified')return false;
-  toast(S.kyc==='rejected'?'Votre vérification d\'identité a été refusée. Contactez le support J-WIN.':'Votre identité est en cours de vérification par l\'équipe J-WIN. Vous serez prévenu par SMS et e-mail dès qu\'elle sera validée.');
-  return true;
-}
+function needKyc(){return false}
 /* ---------- détail d'une mission ---------- */
 const MAP_ROUTE=`<svg class="md-map" viewBox="0 0 260 130" role="img" aria-label="Itinéraire vers la mission"><rect width="260" height="130" fill="#1d2430"/><g stroke="#39445a" stroke-width="8" fill="none" stroke-linecap="round"><path d="M-10 42L120 58 270 22"/><path d="M30-10L62 140"/><path d="M142-10L120 140"/><path d="M-10 100L270 84"/><path d="M204-10L232 140"/></g><path d="M62 112L60 84 120 56 138 28 204 20 226 38" stroke="#3b82f6" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><circle cx="62" cy="112" r="6" fill="#fff" stroke="#3b82f6" stroke-width="3"/><path d="M226 20c-6.6 0-11 4.8-11 10.4 0 7.2 11 17.6 11 17.6s11-10.4 11-17.6C237 24.8 232.6 20 226 20z" fill="#e8202f"/><circle cx="226" cy="30" r="4" fill="#fff"/></svg>`;
 function openMission(id,keep){
@@ -3636,7 +3633,7 @@ function openMission(id,keep){
 async function doAccept(id){
   if(needKyc())return;
   const m0=findM(id);if(!m0)return;
-  if(quotaLeft('do')<1){dlgClose();return toast('Votre offre '+planOf().n+' ne permet plus de réaliser de mission sur cette période. Changez d\'offre pour continuer.')}
+  if(quotaLeft('do')<1){dlgClose();if(!isVer()){go('settings');return toast('Limite de '+UNVER()+' missions réalisées atteinte sans vérification d\'identité. Vérifiez votre identité ci-dessous pour continuer.')}return toast('Votre offre '+planOf().n+' ne permet plus de réaliser de mission sur cette période. Changez d\'offre pour continuer.')}
   if(LIVE)return liveAct(id,'accept',null,'Mission acceptée. Retrouvez-la dans votre historique.',true);
   const i=S.market.findIndex(m=>m.id===id);if(i<0)return;
   const m=S.market.splice(i,1)[0];
@@ -3819,7 +3816,7 @@ async function submitCreate(){
   ok=fe('cDesc',$('#cDesc').value.trim().length>=10?'':'Décrivez la mission en quelques phrases (10 caractères minimum).')&&ok;
   ok=fe('cAmt',amount>=100?'':'Le montant minimum est de 100 F.')&&ok;
   if(!ok)return;
-  if(!ed&&quotaLeft('create')<1){$('#cErr').innerHTML='Votre offre '+esc(planOf().n)+' n\'autorise plus de création de mission sur cette période. <button class="link" type="button" data-act="plans">Changer d\'offre</button>';return}
+  if(!ed&&quotaLeft('create')<1){$('#cErr').innerHTML=isVer()?'Votre offre '+esc(planOf().n)+' n\'autorise plus de création de mission sur cette période. <button class="link" type="button" data-act="plans">Changer d\'offre</button>':'Limite de '+UNVER()+' missions créées atteinte sans vérification d\'identité. <button class="link" type="button" data-act="kyc-go">Vérifier mon identité</button>';return}
   const md=UI.create.media,remote=mode==='remote';
   const data={title,desc:$('#cDesc').value.trim(),cat:$('#cCat').value,dl:Number($('#cDl').value)||0,mode,city:remote?'En ligne':$('#cCity').value,place:remote?'':$('#cPlace').value.trim(),lat:remote?null:md.lat,lng:remote?null:md.lng,amount,win:tier(amount),open:$('#cOpen').checked,askLoc:remote?false:$('#cAsk').checked,images:md.images.slice(),audio:md.audio,files:Array.from($('#cFiles').files||[]).map(f=>f.name)};
   if(ed){
@@ -3854,6 +3851,7 @@ async function submitCreate(){
 
 /* ---------- paiements : recharge / retrait ---------- */
 function openPay(kind,preAmount){
+  if(kind==='withdraw'&&!isVer()){dlgClose();go('settings');toast('Vérifiez votre identité pour retirer des fonds.');return}
   UI.pay={kind,method:'orange',amount:preAmount||0};
   renderPay('form');
 }
@@ -3976,7 +3974,7 @@ const BOT=[
   [/niveau|tranche|win ?[123]|quel win/,'WIN 1 : de 100 à 10 000 F. WIN 2 : de 10 000 à 50 000 F. WIN 3 : plus de 50 000 F. J-WIN classe chaque mission avant sa publication.'],
   [/offre|abonn|entreprise|standard|forfait/,'L\'offre Standard est gratuite (100 missions créées et 50 réalisées par trimestre). Les offres Entreprise coûtent 10 000, 20 000 (Entreprise Standard) ou 60 000 F (Entreprise Premium, illimitée) par mois. Modifiez la vôtre depuis Portefeuille.'],
   [/paie|pay[ée]|reçu|reclam|réclam|non obtenu|argent/,'Vous êtes payé automatiquement après la validation du donneur de mission. Si vous n\'avez pas reçu votre WIN, ouvrez la mission et choisissez « Signaler un problème » : le service client examine la mission.'],
-  [/ident|vérif|cni|passeport|selfie/,'Ajoutez votre pièce d\'identité (CNI ou passeport) et un selfie depuis Paramètres, Vérification d\'identité. Elle est nécessaire pour accepter ou publier des missions.'],
+  [/ident|vérif|cni|passeport|selfie/,'Ajoutez votre pièce d\'identité (CNI ou passeport) et un selfie depuis Paramètres, Vérification d\'identité. Sans elle, vous pouvez créer et réaliser 3 missions et vous ne pouvez pas retirer de fonds ; une fois validée, ces limites sont levées.'],
   [/mission|créer|creer|accepter|publier/,'Pour trouver une mission, ouvrez Missions. Pour en publier une, choisissez Créer une mission : décrivez-la, proposez un montant, J-WIN la valide et la classe.']
 ];
 function chatSay(t,me){const l=$('#chatLog');l.insertAdjacentHTML('beforeend',`<div class="bub ${me?'me2':'bot'}">${esc(t)}</div>`);l.scrollTop=l.scrollHeight}
@@ -4001,8 +3999,10 @@ const ACT={
   signup(){openAuth('signup')},
   login(){openAuth('login')},
   'auth-login'(){setLogin(A.lt);showAuth('login')},
-  'auth-signup'(){setMethod(A.method);showAuth(A.identity?'signup':'idv')},
-  'signup-back'(){showAuth('idv')},
+  'auth-signup'(){setMethod(A.method);showAuth('signup')},
+  'kyc-open'(){openKyc()},
+  'kyc-go'(){dlgClose();go('settings');setTimeout(openKyc,150)},
+  'kyc-sim'(){S.kyc='verified';notify('check','Identité vérifiée','Votre identité est vérifiée : les limites sont levées.',['sms','mail']);saveS();render();toast('Identité vérifiée (simulation de l\'administrateur).')},
   'c-geo'(){geoHere()},
   'c-rec'(){toggleRec()},
   'c-img-del'(el){UI.create.media.images.splice(Number(el.dataset.i),1);renderThumbs()},
@@ -4043,9 +4043,16 @@ const ACT={
     startOtp({purpose:'login',target:normPhone($('#cTel').value),channels:[el.dataset.ch]});
   },
   forgot(){showAuth('forgot')},
-  'forgot-send'(el){
-    if(!fe('fTel',validPhone($('#fTel').value)?'':'Entrez un numéro mobile ivoirien à 10 chiffres.'))return;
-    startOtp({purpose:'reset',target:normPhone($('#fTel').value),channels:[el.dataset.ch]});
+  'forgot-send'(){
+    const em=$('#fMail').value.trim();
+    if(!fe('fMail',validMail(em)?'':'Entrez l\'adresse e-mail de votre compte.'))return;
+    if(LIVE){
+      http('/api/password/forgot',{body:{email:em}}).then(()=>{showAuth('login');toast('Si un compte existe avec cette adresse, un lien de réinitialisation vient d\'être envoyé par e-mail.')}).catch(e=>fe('fMail',e.message));
+      return;
+    }
+    const u=API.byEmail(em);
+    if(!u||!u.pwHash){showAuth('login');return toast('Si un compte existe avec cette adresse, un lien de réinitialisation vient d\'être envoyé par e-mail.')}
+    A.reset={contact:u.contact};showAuth('newpw');toast('Démonstration : le lien reçu par e-mail est simulé, choisissez un nouveau mot de passe.');
   },
   go(el){go(el.dataset.v)},
   create(){if(dlg.open)dlgClose();openCreate()},
@@ -4103,7 +4110,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.classList&&t.classList.contains('js-phone')){t.value=fmtPhone(normPhone(t.value).slice(0,10))}
-  if(t.id==='iDob'){
+  if(t.id==='sDob'){
     const d=digits(t.value).slice(0,8);t.value=d.length>4?d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4):d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
     const p=parseFr(t.value);if(p&&DP.open){DP.y=p.getFullYear();DP.m=p.getMonth();dpRender()}
   }
@@ -4162,7 +4169,6 @@ document.addEventListener('submit',async e=>{
   if(id==='fSignup'){
     if(A.method!=='phone')return;
     let ok=validateCommon();
-    if(!A.identity)return;
     const tel=$('#sTel').value,pw=$('#sPw').value,pw2=$('#sPw2').value;
     if(!fe('sTel',validPhone(tel)?'':'Entrez un numéro mobile ivoirien à 10 chiffres (ex. 07 00 00 00 00).'))ok=false;
     else if(!LIVE&&API.byContact(tel)){fe('sTel','Ce numéro est déjà associé à un compte. Connectez-vous.');ok=false}
@@ -4171,7 +4177,13 @@ document.addEventListener('submit',async e=>{
     if(!fe('sPw',pwOk(pw)?'':'Le mot de passe doit contenir 8 caractères minimum, dont une lettre et un chiffre.'))ok=false;
     if(!fe('sPw2',pw&&pw===pw2?'':'Les deux mots de passe ne correspondent pas.'))ok=false;
     if(!ok)return;
-    startOtp({purpose:'signup',target:normPhone(tel),channels:['sms','whatsapp'],ctx:{profile:Object.assign(profileFromForm(),{email:mail.toLowerCase()}),pw}});
+    const p=Object.assign(profileFromForm(),{email:mail.toLowerCase()});
+    if(LIVE){
+      try{const r=await http('/api/register',{body:{phone:normPhone(tel),nom:p.nom,prenoms:p.prenoms,naissance:p.naissance,email:p.email,password:pw}});return enterFromServer(r,{welcome:true,notified:r.notified})}
+      catch(e){return toast(e.message)}
+    }
+    const u=await API.createUser(Object.assign({},p,{contact:normPhone(tel),pw}));
+    return enterApp(u,{remember:true,welcome:true});
   }
   else if(id==='fLoginPw'){
     const tel=$('#lTel').value,pw=$('#lPw').value;
@@ -4193,7 +4205,7 @@ document.addEventListener('submit',async e=>{
     if(!fe('ssoEmail',validMail(em)?'':'Entrez une adresse e-mail valide.'))return;
     if(A.sso.p==='other'){
       if(A.sso.ctx==='signup'&&API.byEmail(em))return fe('ssoEmail','Un compte existe déjà avec cette adresse. Connectez-vous.');
-      startOtp({purpose:'email-'+A.sso.ctx,target:em,channels:['mail']});
+      ssoComplete(em);
     }else ssoComplete(em);
   }
   else if(id==='fNewPw'){
@@ -4202,13 +4214,13 @@ document.addEventListener('submit',async e=>{
     ok=fe('nPw2',p&&p===p2?'':'Les deux mots de passe ne correspondent pas.')&&ok;
     if(!ok)return;
     if(LIVE){
-      try{await http('/api/password/reset',{body:{proof:A.reset.proof,password:p}})}catch(e){return fe('nPw',e.message)}
+      try{await http('/api/password/reset',{body:A.reset.token?{token:A.reset.token,password:p}:{proof:A.reset.proof,password:p}})}catch(e){return fe('nPw',e.message)}
     }else{
       const all=API.users(),u=all.find(x=>x.contact===A.reset.contact);
       if(u){u.salt=rndHex(8);u.pwHash=await hashPw(p,u.salt);API.saveUsers(all)}
     }
     $('#nPw').value='';$('#nPw2').value='';
-    $('#lTel').value=fmtPhone(A.reset.contact);setLogin('pw');showAuth('login');toast('Mot de passe mis à jour. Vous pouvez vous connecter.');
+    if(A.reset.contact)$('#lTel').value=fmtPhone(A.reset.contact);setLogin('pw');showAuth('login');toast('Mot de passe mis à jour. Vous pouvez vous connecter.');
   }
   else if(id==='fProfile'){
     S.profile.adresse=$('#pAddr').value.trim();S.profile.sex=$('#pSex').value;S.profile.lang=$('#pLang').value;
@@ -4223,7 +4235,7 @@ document.addEventListener('submit',async e=>{
     u.salt=rndHex(8);u.pwHash=await hashPw($('#cpNew').value,u.salt);API.saveUsers(all);user=u;
     $('#cpOld').value='';$('#cpNew').value='';toast('Mot de passe actualisé.');
   }
-  else if(id==='fId')idSubmit();
+  else if(id==='fKyc')kycSubmit();
   else if(id==='fCreate')submitCreate();
   else if(id==='fPay')submitPay();
   else if(id==='fPlan')submitPlan();
@@ -4235,6 +4247,8 @@ auth.addEventListener('cancel',e=>{if(DP.open){e.preventDefault();dpClose()}});
 
 document.addEventListener('change',async e=>{
   const t=e.target;
+  if(t.id==='iType'){const w=$('#iVersoW');if(w)w.hidden=t.value==='passeport'}
+  if((t.id==='iRecto'||t.id==='iVerso')&&LIVE&&SERVER.ocr)ocrRun();
   if(t.name==='cMode'){const r=t.value==='remote';$('#cOnsite').hidden=r;$('#cRemote').hidden=!r}
   if(t.id==='cImgs'){await addImages(t.files);t.value=''}
   if(t.id==='cAudioFile'&&t.files[0]){const f=t.files[0];if(f.size>1.8e6){toast('Fichier trop lourd (1,8 Mo maximum).')}else{UI.create.media.audio=await blobToDataUrl(f);renderAudioBox()}t.value=''}
@@ -4253,6 +4267,7 @@ document.addEventListener('click',e=>{
 window.addEventListener('jwin-full',()=>{if(!store.warned){store.warned=true;toast('Stockage du navigateur presque plein : retirez des photos ou des missions.')}});
 
 /* ---------- init ---------- */
+(function(){const rt=new URLSearchParams(location.search).get('reset');if(LIVE&&rt){A.reset={token:rt};try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>{openD(auth);showAuth('newpw')},500)}})();
 ssoButtons();initSelects();
 (async function restore(){
   refreshSiteNav();

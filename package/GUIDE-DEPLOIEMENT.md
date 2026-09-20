@@ -8,10 +8,11 @@ les missions partagées entre utilisateurs, les dépôts et les retraits ne fonc
 2. Toujours dans *Sécurité*, cherchez **« Mots de passe des applications »**, créez-en un nommé « J-WIN ».
 3. Google affiche 16 caractères : c'est `SMTP_PASS`. Gardez-le, il ne s'affiche qu'une fois.
 
-## 2. SMS et WhatsApp (facultatif mais nécessaire pour les codes de vérification)
-Créez un compte **Twilio**, achetez un numéro capable d'envoyer des SMS en Côte d'Ivoire, puis notez `TWILIO_ACCOUNT_SID`,
-`TWILIO_AUTH_TOKEN` et le numéro (`TWILIO_SMS_FROM`). Sans Twilio, mettez `OTP_MODE=console` : les codes s'affichent dans
-les journaux du serveur (utile pour tester, pas pour de vrais utilisateurs).
+## 2. SMS (facultatif)
+**Plus aucun code n'est demandé** : ni à l'inscription, ni à la connexion. Le compte est créé tout de suite avec le numéro, l'e-mail et le mot de passe.
+Twilio ne sert plus qu'aux SMS de notification (bienvenue, validations, paiements). Sans Twilio (`OTP_MODE=console`), les SMS ne partent pas
+mais tout le reste fonctionne, e-mails compris. Pour l'activer : compte **Twilio**, numéro capable d'envoyer des SMS en Côte d'Ivoire, puis
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` et `TWILIO_SMS_FROM`.
 
 ## 3. Publier sur Render (10 min)
 1. Créez un compte gratuit sur **github.com**, puis un dépôt vide « j-win » et envoyez-y le contenu de ce dossier (bouton *Add file > Upload files*).
@@ -28,7 +29,7 @@ les journaux du serveur (utile pour tester, pas pour de vrais utilisateurs).
 | Un utilisateur crée une mission | E-mail « mission à approuver » (photos, vocal, montant) + SMS | Bouton **Approuver** ou **Refuser** : la mission devient visible par tous |
 | Un utilisateur dépose de l'argent | E-mail « dépôt à valider » avec référence `DEP-…` | Vérifiez la réception sur votre Orange Money +225 07 88 33 02 48, puis **Valider le dépôt** : son portefeuille est crédité et sa facture émise |
 | Un utilisateur demande un retrait | E-mail « retrait à payer » (montant net, numéro, moyen) | Envoyez l'argent, puis cliquez **J'ai payé** (ou **Refuser** : il est remboursé) |
-| Nouvel inscrit (si `KYC_MODE=manual`) | E-mail « identité à vérifier » | **Valider l'identité** ou **Refuser** |
+| Un utilisateur envoie sa pièce d'identité et son selfie (Paramètres) | E-mail « identité à vérifier » | Regardez les photos dans la console (Utilisateurs > fiche), puis **Valider l'identité** ou **Refuser** |
 
 Chaque lien demande une confirmation et n'agit qu'une fois. Ne les transférez à personne.
 
@@ -44,7 +45,13 @@ Définissez `ADMIN_PASSWORD` (un mot de passe long et unique) puis ouvrez `/admi
 
 Faites une sauvegarde régulièrement (au moins chaque semaine) et gardez-la ailleurs que sur le serveur. Pour modifier les textes ou le design du site lui-même, il faut modifier le code : demandez-le à votre développeur ou à Claude, puis republiez.
 
-## 6. Limites actuelles (à connaître)
+## 6. Inscription, vérification et limites
+- **Inscription** : nom, prénoms, date de naissance, numéro, e-mail, mot de passe (ou messagerie Google une fois configurée). Aucun code à saisir. Les numéros et e-mails ne sont donc pas prouvés : un même numéro ou e-mail ne peut servir qu'à un compte.
+- **Profil non vérifié** au départ : au maximum **3 missions créées et 3 réalisées** (modifiable dans Réglages du site), et **pas de retrait**.
+- **Vérification** : depuis Paramètres, l'utilisateur envoie sa CNI ou son passeport (le numéro est lu automatiquement) et un selfie. Vous contrôlez et validez ; les limites Standard (100 créées / 50 réalisées par trimestre) s'appliquent alors. `KYC_MODE=auto` valide sans contrôle humain.
+- **Mot de passe oublié** : l'utilisateur reçoit un lien par e-mail (valable 1 heure, utilisable une seule fois).
+
+## 7. Limites actuelles (à connaître)
 - Les offres Entreprise ne sont pas encore facturées côté serveur : tous les comptes ont les limites de l'offre Standard (100 créées / 50 réalisées par trimestre).
 - Apple / Microsoft / Yahoo : non branchés (Google uniquement). Le paiement automatique CinetPay reste disponible (`PAYMENT_MODE=cinetpay`).
 - Contrôle d'identité : `KYC_MODE=auto` fait confiance aux informations saisies. Passez en `manual` pour valider vous-même chaque personne.

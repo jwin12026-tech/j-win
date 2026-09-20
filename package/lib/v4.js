@@ -65,6 +65,35 @@ export function registerV4({ app, db, cfg, auth, wrap, bad, limiter, userById, n
   v4.kycAlert = (u, type, last3) => alertAdmin(`identité à vérifier ${who(u)}`, [`Nom : ${u.prenoms} ${u.nom}`, `Né(e) le : ${u.dob}`, `Pièce : ${type || '?'} (fin ${last3 || '???'})`, `Téléphone : ${u.phone || ''} · E-mail : ${u.email || ''}`, `Adresse : ${u.adresse || ''}`],
     [{ label: 'Valider l\'identité', url: link({ t: 'kyc', id: u.id, a: 'approve' }), color: '#16a34a' }, { label: 'Refuser', url: link({ t: 'kyc', id: u.id, a: 'reject' }), color: '#dc2626' }]);
 
+  /* ---------- vérification d'identité (depuis les paramètres de l'utilisateur) ---------- */
+  const kycDir = path.join(path.dirname(dir), 'kyc'); fs.mkdirSync(kycDir, { recursive: true });
+  const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+  const kycUpload = multer({ storage: multer.diskStorage({ destination: kycDir, filename: (r, f, cb) => cb(null, crypto.randomBytes(14).toString('hex') + (EXT[f.mimetype] || '.jpg')) }), limits: { fileSize: 12 * 1024 * 1024, files: 3 }, fileFilter: (r, f, cb) => cb(null, IMG.test(f.mimetype)) });
+  const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/gi, '').toLowerCase();
+  app.post('/api/kyc/submit', auth, limiter(60e3, 5), kycUpload.fields([{ name: 'front', maxCount: 1 }, { name: 'back', maxCount: 1 }, { name: 'selfie', maxCount: 1 }]), wrap(async (req, res) => {
+    const u = userById(req.uid), b = req.body || {}, f = req.files || {}, type = b.type === 'passeport' ? 'passeport' : 'cni', num = String(b.number || '').replace(/\s/g, '').toUpperCase();
+    const drop = () => Object.values(f).flat().forEach((x) => fs.rm(x.path, () => {}));
+    try {
+      if (u.kyc_status === 'verified') throw bad('Votre identité est déjà vérifiée.', 409);
+      if (u.kyc_status === 'pending') throw bad('Votre vérification est déjà en cours d\'examen.', 409);
+      if (!(type === 'cni' ? /^([0-9]{11}|[A-Z]\d{10})$/.test(num) : /^[A-Z0-9]{6,9}$/.test(num))) throw bad('Numéro de pièce invalide.');
+      if (!f.front?.[0] || !f.selfie?.[0] || (type === 'cni' && !f.back?.[0])) throw bad('Photos manquantes : recto, verso (carte) et selfie sont requis.');
+    } catch (e) { drop(); throw e; }
+    const old = db.prepare('SELECT * FROM kyc_docs WHERE user_id=?').get(u.id);
+    if (old) for (const k of ['front', 'back', 'selfie']) if (old[k]) fs.rm(path.join(kycDir, old[k]), () => {});
+    const ocr = { nom: b.ocrNom || '', prenoms: b.ocrPrenoms || '', dob: b.ocrDob || '', confidence: b.ocrConfidence || '' };
+    db.prepare('INSERT INTO kyc_docs(user_id,type,front,back,selfie,ocr,submitted_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET type=excluded.type,front=excluded.front,back=excluded.back,selfie=excluded.selfie,ocr=excluded.ocr,submitted_at=excluded.submitted_at').run(u.id, type, f.front[0].filename, f.back?.[0]?.filename || null, f.selfie[0].filename, JSON.stringify(ocr), Date.now());
+    const auto = cfg.kycMode === 'auto', status = auto ? 'verified' : 'pending';
+    db.prepare('UPDATE users SET kyc_status=?, kyc_doc_type=?, kyc_doc_last4=? WHERE id=?').run(status, type, num.slice(-3), u.id);
+    if (!auto) {
+      const match = ocr.nom ? (norm(ocr.nom) === norm(u.nom) ? 'le nom lu sur la pièce correspond au compte' : `ATTENTION : nom lu « ${ocr.nom} » ≠ compte « ${u.nom} »`) : 'pièce non lue automatiquement';
+      alertAdmin(`identité à vérifier ${who(u)}`, [`Compte : ${u.prenoms} ${u.nom} · né(e) le ${u.dob}`, `Pièce : ${type} (fin ${num.slice(-3)}) · ${match}`, `Contact : ${u.phone || ''} ${u.email || ''}`, `Regardez les photos (pièce + selfie) dans la console : ${cfg.publicUrl}/admin > Utilisateurs > ${u.nom}`],
+        [{ label: 'Valider l\'identité', url: link({ t: 'kyc', id: u.id, a: 'approve' }), color: '#16a34a' }, { label: 'Refuser', url: link({ t: 'kyc', id: u.id, a: 'reject' }), color: '#dc2626' }]);
+    }
+    fire(notifier.toUser(u, auto ? 'Identité vérifiée' : 'Vérification reçue', auto ? 'Votre identité est vérifiée : les limites sont levées.' : 'Nous avons bien reçu votre pièce d\'identité et votre selfie. Vous serez prévenu dès la fin du contrôle.'));
+    res.json({ ok: true, status });
+  }));
+
   /* ---------- missions ---------- */
   app.post('/api/missions', auth, limiter(60e3, 12), upload.fields([{ name: 'images', maxCount: 4 }, { name: 'audio', maxCount: 1 }]), wrap(async (req, res) => {
     const b = req.body || {}, u = userById(req.uid);
@@ -75,9 +104,9 @@ export function registerV4({ app, db, cfg, auth, wrap, bad, limiter, userById, n
     const mode = b.mode === 'remote' ? 'remote' : 'onsite', cat = CATS.includes(b.cat) ? b.cat : 'visite';
     const lat = num(b.lat), lng = num(b.lng);
     if ((lat !== null && !(lat >= -90 && lat <= 90)) || (lng !== null && !(lng >= -180 && lng <= 180))) throw bad('Position invalide.');
-    const lim = Date.now() - cfg.plan.days * 864e5;
+    const ver = u.kyc_status === 'verified', lim = ver ? Date.now() - cfg.plan.days * 864e5 : 0, cap = ver ? cfg.plan.create : cfg.plan.unverified;
     const used = db.prepare("SELECT COUNT(*) c FROM missions WHERE creator_id=? AND status!='annulee' AND mod!='rejetee' AND created_at>=?").get(u.id, lim).c;
-    if (used >= cfg.plan.create) throw bad(`Limite atteinte : ${cfg.plan.create} missions créées sur la période avec votre offre.`, 403);
+    if (used >= cap) throw bad(ver ? `Limite atteinte : ${cap} missions créées sur la période avec votre offre.` : `Limite atteinte : ${cap} missions créées sans vérification d'identité. Vérifiez votre identité dans Paramètres pour en créer davantage.`, 403);
     const id = `J-${code5()}/${new Date().getFullYear()}`;
     const imgs = (req.files?.images || []).map((f) => saveMedia(f, u.id)), aud = req.files?.audio?.[0] ? saveMedia(req.files.audio[0], u.id) : null;
     db.prepare(`INSERT INTO missions(id,creator_id,title,descr,cat,mode,city,place,lat,lng,amount,win,open,ask_loc,dl,images,audio,mod,status,created_at)
@@ -100,9 +129,9 @@ export function registerV4({ app, db, cfg, auth, wrap, bad, limiter, userById, n
   }));
   act('accept', async (m, u) => {
     if (m.creator_id === u.id) throw bad('Vous ne pouvez pas réaliser votre propre mission.');
-    const lim = Date.now() - cfg.plan.days * 864e5;
+    const ver = u.kyc_status === 'verified', lim = ver ? Date.now() - cfg.plan.days * 864e5 : 0, cap = ver ? cfg.plan.do : cfg.plan.unverified;
     const used = db.prepare("SELECT COUNT(*) c FROM missions WHERE executor_id=? AND status!='annulee' AND accepted_at>=?").get(u.id, lim).c;
-    if (used >= cfg.plan.do) throw bad(`Limite atteinte : ${cfg.plan.do} missions réalisées sur la période avec votre offre.`, 403);
+    if (used >= cap) throw bad(ver ? `Limite atteinte : ${cap} missions réalisées sur la période avec votre offre.` : `Limite atteinte : ${cap} missions réalisées sans vérification d'identité. Vérifiez votre identité dans Paramètres pour en réaliser davantage.`, 403);
     const r = db.prepare("UPDATE missions SET status='cours', executor_id=?, accepted_at=? WHERE id=? AND mod='approved' AND status='attente' AND executor_id IS NULL").run(u.id, Date.now(), m.id);
     if (!r.changes) throw bad('Cette mission n\'est plus disponible.', 409);
     fire(notifier.toUser(userById(m.creator_id), `Mission acceptée ${m.id}`, `${who(u)} a accepté votre mission « ${m.title} ».`));
@@ -165,6 +194,7 @@ export function registerV4({ app, db, cfg, auth, wrap, bad, limiter, userById, n
   /* ---------- retraits : le solde est réservé, l'administrateur paie à la main ---------- */
   v4.payout = wrap(async (req, res) => {
     const { amount, method, phone } = req.body || {}, A = Number(amount), u = userById(req.uid);
+    if (u.kyc_status !== 'verified' && cfg.prod) throw bad('Vérifiez votre identité (Paramètres) avant de retirer des fonds.', 403);
     if (!Number.isInteger(A) || A < cfg.limits.withdrawMin || A > cfg.limits.withdrawMax) throw bad(`Montant entre ${cfg.limits.withdrawMin} et ${cfg.limits.withdrawMax} F.`);
     if (!METHOD_LABEL[method] || method === 'card') throw bad('Moyen de paiement non pris en charge.');
     if (!validPhone(phone)) throw bad('Numéro mobile ivoirien invalide.');

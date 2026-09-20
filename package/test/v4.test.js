@@ -120,7 +120,7 @@ test('mission refusée par l\'administrateur, quota de création, solde insuffis
   assert.equal((await adminDo(actionLink(mail, 'Refuser'), 'Contenu non conforme')).s, 200);
   const mine = (await call('GET', '/api/missions', null, A.j.token)).j.mine.find((x) => x.id === m.j.mission.id);
   assert.equal(mine.mod, 'rejetee'); assert.equal(mine.modNote, 'Contenu non conforme');
-  cfg.plan.create = 1; assert.equal((await mk('Trois')).s, 403); cfg.plan.create = 100;
+  cfg.plan.unverified = 1; assert.equal((await mk('Trois')).s, 403); cfg.plan.unverified = 3;
   const poor = await register('0701000005', 'poor@example.com', 'Pauvre');
   const fd = new FormData(); Object.entries({ title: 'Mission chère', desc: 'Une description suffisante.', cat: 'visite', mode: 'remote', amount: '9000' }).forEach(([k, v]) => fd.append(k, v));
   const c = await call('POST', '/api/missions', null, poor.j.token, fd);
@@ -129,14 +129,3 @@ test('mission refusée par l\'administrateur, quota de création, solde insuffis
   assert.equal((await call('POST', `/api/missions/${encodeURIComponent(c.j.mission.id)}/validate`, {}, poor.j.token)).s, 402);
 });
 
-test('KYC manuel : compte en attente puis validé par l\'administrateur', async () => {
-  cfg.kycMode = 'manual';
-  const k = await register('0701000006', 'kyc@example.com', 'Kyc');
-  assert.equal(k.j.user.kycStatus, 'pending');
-  const mail = mailTo('jwin1.2026@gmail.com', 'identité à vérifier');
-  assert.ok(mail.text.includes('kyc@example.com'));
-  assert.equal((await adminDo(actionLink(mail, 'Valider l\'identité'))).s, 200);
-  assert.equal((await call('GET', '/api/me', null, k.j.token)).j.user.kycStatus, 'verified');
-  cfg.kycMode = 'auto';
-  assert.equal((await register('0701000007', 'auto@example.com', 'Auto')).j.user.kycStatus, 'verified');
-});

@@ -46,11 +46,11 @@ export function loadConfig(overrides = {}) {
       host: env.SMTP_HOST || '', port: int(env.SMTP_PORT, 465), user: env.SMTP_USER || '', pass: env.SMTP_PASS || '',
       from: env.SMTP_FROM || '', json: false,                    // json = mode test (aucun envoi)
     },
-    plan: { create: int(env.PLAN_CREATE_LIMIT, 100), do: int(env.PLAN_DO_LIMIT, 50), days: 90 },
+    plan: { create: int(env.PLAN_CREATE_LIMIT, 100), do: int(env.PLAN_DO_LIMIT, 50), unverified: int(env.PLAN_UNVERIFIED_LIMIT, 3), days: 90 },
     adminPassword: env.ADMIN_PASSWORD || '',                     // mot de passe de la console /admin (vide = console désactivée)
     banner: '', maintenance: false,
     requireEmail: true,
-    kycMode: env.KYC_MODE || 'auto',   // auto : compte vérifié dès l'inscription ; manual : l'administrateur valide chaque identité (lien reçu par e-mail)
+    kycMode: env.KYC_MODE || 'manual',   // auto : compte vérifié dès l'inscription ; manual : l'administrateur valide chaque identité (lien reçu par e-mail)
     googleClientId: env.GOOGLE_CLIENT_ID || '',
     ocrEnabled: env.OCR_ENABLED !== 'false',
     company: {
