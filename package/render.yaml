@@ -1,0 +1,27 @@
+# Déploiement en un clic sur Render : New + > Blueprint > choisir ce dépôt GitHub.
+services:
+  - type: web
+    name: j-win
+    runtime: docker
+    plan: starter            # ≈ 7 $/mois : nécessaire pour le disque persistant (le plan gratuit efface les données)
+    healthCheckPath: /api/health
+    disk: { name: jwin-data, mountPath: /app/data, sizeGB: 1 }
+    envVars:
+      - { key: NODE_ENV, value: production }
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: PUBLIC_URL, sync: false }        # ex. https://j-win.onrender.com (visible après la première création)
+      - { key: ADMIN_PASSWORD, sync: false }    # mot de passe de la console /admin
+      - { key: ADMIN_EMAIL, value: jwin1.2026@gmail.com }
+      - { key: ADMIN_PHONE, value: "0788330248" }
+      - { key: ADMIN_OM_NUMBER, value: "+225 07 88 33 02 48" }
+      - { key: SMTP_HOST, value: smtp.gmail.com }
+      - { key: SMTP_PORT, value: "465" }
+      - { key: SMTP_USER, value: jwin1.2026@gmail.com }
+      - { key: SMTP_PASS, sync: false }         # mot de passe d'application Gmail
+      - { key: SMTP_FROM, value: "J-WIN <jwin1.2026@gmail.com>" }
+      - { key: OTP_MODE, value: twilio }
+      - { key: TWILIO_ACCOUNT_SID, sync: false }
+      - { key: TWILIO_AUTH_TOKEN, sync: false }
+      - { key: TWILIO_SMS_FROM, sync: false }
+      - { key: PAYMENT_MODE, value: manual }
+      - { key: KYC_MODE, value: auto }
